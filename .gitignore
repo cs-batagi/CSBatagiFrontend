@@ -10,6 +10,9 @@ yarn-error.log*
 .env
 .env*.local
 
+# Local development files with sensitive information
+firebase-messaging-sw.local.js
+
 # VS Code settings
 .vscode/
 !/.vscode/settings.json
