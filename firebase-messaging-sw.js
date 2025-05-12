@@ -2,11 +2,11 @@ importScripts('https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/9.6.7/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "__FIREBASE_API_KEY__",
-  authDomain: "__FIREBASE_AUTH_DOMAIN__",
-  projectId: "__FIREBASE_PROJECT_ID__",
-  messagingSenderId: "__FIREBASE_MESSAGING_SENDER_ID__",
-  appId: "__FIREBASE_APP_ID__"
+  apiKey: "AIzaSyAJpmATHX2Zugnm4c1WhU5Kg9iMOruiZBU",
+  authDomain: "csbatagirealtimedb.firebaseapp.com",
+  projectId: "csbatagirealtimedb",
+  messagingSenderId: "408840223663",
+  appId: "1:408840223663:web:bdcf576d64b3a1fb6c4d5a"
 });
 
 const messaging = firebase.messaging();
