@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onuratak/CSBatagiFrontend.git"
+    "url": "git+https://github.com/CSBatagi/CSBatagiFrontend.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/onuratak/CSBatagiFrontend/issues"
+    "url": "https://github.com/CSBatagi/CSBatagiFrontend/issues"
   },
-  "homepage": "https://github.com/onuratak/CSBatagiFrontend#readme",
+  "homepage": "https://github.com/CSbatagi/CSBatagiFrontend#readme",
   "dependencies": {
     "node-fetch": "^2.7.0"
   }
