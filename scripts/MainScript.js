@@ -4,11 +4,19 @@
 // --- End Firebase Initialization ---
 
 // --- Constants ---
-const APPS_SCRIPT_URL = 'https://royal-flower-aa89.onur1atak.workers.dev/'; // Replace with your actual URL
 const DEFAULT_PAGE = 'home'; 
-const SEASON_AVG_JSON_URL = 'data/season_avg.json';
-const LAST10_JSON_URL = 'data/last10.json';
-const NIGHT_AVG_JSON_URL = 'data/night_avg.json';
+// Firebase Database Paths
+const DB_PATHS = {
+  SEASON_AVG: 'seasonAvg',
+  LAST10: 'last10',
+  NIGHT_AVG: 'nightAvg',
+  SON_MAC: 'sonMac',
+  DUELLO_SON_MAC: 'duelloSonMac',
+  DUELLO_SEZON: 'duelloSezon',
+  PERFORMANCE_DATA: 'performanceData',
+  ATTENDANCE_STATE: 'attendanceState',
+  EMOJI_STATE: 'emojiState'
+};
 // const SONMAC_JSON_URL = 'data/sonmac.json'; // MOVED to sonMac.js
 // const DUELLO_JSON_URL = 'data/duello_son_mac.json'; // MOVED to duello.js
 // const DUELLO_SEZON_JSON_URL = 'data/duello_sezon.json'; // MOVED to duello.js

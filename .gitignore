@@ -25,3 +25,9 @@ build
 # Optional files
 .DS_Store
 Thumbs.db 
+
+
+.idea
+
+
+

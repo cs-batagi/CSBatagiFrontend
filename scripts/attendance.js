@@ -70,7 +70,7 @@ const Attendance = {
             this.attachEmojiFirebaseListener();
             this.emojiListenersAttached = true;
         }
-        
+
         // Force emoji initialization (in case Firebase listener hasn't triggered yet)
         this.initializeEmojiStatuses();
     },
@@ -127,7 +127,7 @@ const Attendance = {
         }
 
         const emojiRef = database.ref(this.EMOJI_DB_PATH);
-        
+
         // Check if emoji data exists
         emojiRef.once('value', (snapshot) => {
             const emojiData = snapshot.val() || {};
@@ -171,38 +171,38 @@ const Attendance = {
      */
     updateEmojiUIFromFirebase: function(emojiData) {
         console.log("Updating emoji UI with data:", emojiData); // Debug log
-        
+
         const playerRows = document.querySelectorAll('#player-list tr[data-player-name]');
         if (playerRows.length === 0) {
             console.warn("No player rows found to update emoji UI.");
             return;
         }
-        
+
         playerRows.forEach(row => {
             const playerName = row.getAttribute('data-player-name');
             if (!playerName) {
                 console.warn("Row missing data-player-name attribute");
                 return;
             }
-            
+
             const player = players.find(p => p.name === playerName);
-            
+
             if (!player || !player.steamId) {
                 console.warn(`Could not find player data or SteamID for ${playerName}.`);
                 return;
             }
-            
+
             const steamIdStr = String(player.steamId);
             const statusCell = row.querySelector('td:nth-child(2)'); // Status is second column
-            
+
             if (!statusCell) {
                 console.warn(`Could not find status cell for ${playerName}.`);
                 return;
             }
-            
+
             // Clear status cell first
             statusCell.innerHTML = '';
-            
+
             // Create a new emoji control container
             const container = document.createElement('div');
             container.className = 'emoji-control-container'; 
@@ -213,31 +213,31 @@ const Attendance = {
             leftArrowBtn.setAttribute('data-direction', 'left');
             leftArrowBtn.setAttribute('data-player', playerName);
             leftArrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
-            
+
             // Get the current emoji state from Firebase
             let currentState = "normal"; // Default
             if (emojiData[steamIdStr] && emojiData[steamIdStr].status) {
                 currentState = emojiData[steamIdStr].status;
             }
-            
+
             const labelSpan = document.createElement('span');
             labelSpan.className = 'emoji-label';
             labelSpan.textContent = this.EMOJI_MAPPING[currentState] || "😊";
             labelSpan.setAttribute('data-state', currentState);
             labelSpan.setAttribute('data-player', playerName);
-            
+
             // Add tooltip with explanation
             const explanation = this.EMOJI_EXPLANATIONS[currentState] || "Normal";
             labelSpan.setAttribute('title', explanation);
             labelSpan.setAttribute('data-tooltip', explanation);
-            
+
             const rightArrowBtn = document.createElement('button');
             rightArrowBtn.className = 'emoji-arrow';
             rightArrowBtn.setAttribute('aria-label', `Next emoji for ${playerName}`);
             rightArrowBtn.setAttribute('data-direction', 'right');
             rightArrowBtn.setAttribute('data-player', playerName);
             rightArrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
-            
+
             container.appendChild(leftArrowBtn);
             container.appendChild(labelSpan);
             container.appendChild(rightArrowBtn);
@@ -322,50 +322,50 @@ const Attendance = {
             // Status cell - now with EMOJI controls
             const statusCell = document.createElement('td');
             statusCell.className = 'text-center'; 
-            
+
             // --- Create emoji controls directly here ---
             const steamIdStr = String(player.steamId || '');
             const emojiContainer = document.createElement('div');
             emojiContainer.className = 'emoji-control-container';
-            
+
             const leftArrowBtn = document.createElement('button');
             leftArrowBtn.className = 'emoji-arrow';
             leftArrowBtn.setAttribute('aria-label', `Previous emoji for ${playerName}`);
             leftArrowBtn.setAttribute('data-direction', 'left');
             leftArrowBtn.setAttribute('data-player', playerName);
             leftArrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
-            
+
             // Get the current emoji state if available
             let currentEmojiState = "normal"; // Default
             if (emojiStates[steamIdStr] && emojiStates[steamIdStr].status) {
                 currentEmojiState = emojiStates[steamIdStr].status;
             }
-            
+
             const emojiLabel = document.createElement('span');
             emojiLabel.className = 'emoji-label';
             emojiLabel.textContent = this.EMOJI_MAPPING[currentEmojiState] || "😊";
             emojiLabel.setAttribute('data-state', currentEmojiState);
             emojiLabel.setAttribute('data-player', playerName);
-            
+
             // Add tooltip with explanation
             const explanation = this.EMOJI_EXPLANATIONS[currentEmojiState] || "Normal";
             emojiLabel.setAttribute('title', explanation);
             emojiLabel.setAttribute('data-tooltip', explanation);
-            
+
             const rightArrowBtn = document.createElement('button');
             rightArrowBtn.className = 'emoji-arrow';
             rightArrowBtn.setAttribute('aria-label', `Next emoji for ${playerName}`);
             rightArrowBtn.setAttribute('data-direction', 'right');
             rightArrowBtn.setAttribute('data-player', playerName);
             rightArrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
-            
+
             emojiContainer.appendChild(leftArrowBtn);
             emojiContainer.appendChild(emojiLabel);
             emojiContainer.appendChild(rightArrowBtn);
             statusCell.appendChild(emojiContainer);
-            
+
             row.appendChild(statusCell);
-            
+
             // Check player status for row styling
             const originalStatus = (player.status || '').toLowerCase();
             if (originalStatus === 'adam evde yok') {
@@ -406,7 +406,7 @@ const Attendance = {
 
         // --- Update Summary --- 
         summaryTextSpan.textContent = `Gelen oyuncu: ${countComing}  Belirsiz: ${countNoResponse}`;
-        
+
         // Use the summary-ok class for green state
         if (countComing >= this.TEKER_DONDU_THRESHOLD) { 
             attendanceSummaryDiv.classList.add('summary-ok'); // Add the OK class
@@ -431,7 +431,7 @@ const Attendance = {
     },
 
     /**
-     * Fetches attendance data from the Google Apps Script endpoint.
+     * Fetches attendance data from Firebase.
      * Updates the global `players` array.
      * Uses global `spinner`, `updateButton`, `showMessage`.
      */
@@ -443,72 +443,90 @@ const Attendance = {
         spinner.classList.remove('hidden');
         updateButton.disabled = true;
         try {
-            const response = await fetch(APPS_SCRIPT_URL); // Uses global constant
-            if (!response.ok) {
-                let errorDetails = `HTTP error! Status: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
-                } catch (e) { /* Ignore */ }
-                throw new Error(errorDetails);
+            // Check if Firebase database is available
+            if (typeof database === 'undefined' || database === null) {
+                throw new Error("Firebase database not available");
             }
-            const data = await response.json();
-            if (!Array.isArray(data)) {
-                console.error("Received data is not an array:", data);
-                throw new Error("Invalid data format received from server.");
-            }
-            // players = data; // Update the global players array
-            // NEW: Map steamid to steamId
-            players = data.map(player => ({
-                ...player, // Copy existing properties (name, status, attendance)
-                steamId: player.steamid // Add steamId property from steamid
+
+            // Fetch player data from Firebase
+            const playersRef = database.ref('players');
+            const snapshot = await playersRef.once('value');
+            const playersData = snapshot.val() || {};
+
+            // Convert Firebase object to array
+            const playersArray = Object.keys(playersData).map(steamId => ({
+                name: playersData[steamId].name,
+                status: playersData[steamId].status || '',
+                attendance: 'no_response', // Default attendance
+                steamId: steamId // Add steamId property
             }));
-            console.log("Processed players with steamId:", players); // Debug log
 
-            // --- Write Initial State to Firebase --- 
-            if (typeof database !== 'undefined' && database !== null && this.ATTENDANCE_DB_PATH) {
-                try {
-                    const initialFirebaseState = {};
-                    // NEW: Build state keyed by steamId
-                    players.forEach(player => {
-                        if (player.steamId && player.name) { // Ensure we have ID and name
-                             const steamIdStr = String(player.steamId); // Ensure string key
-                             initialFirebaseState[steamIdStr] = { 
-                                 name: player.name, 
-                                 status: player.attendance || 'no_response' 
-                             };
-                        } else {
-                             console.warn("Skipping player for initial Firebase sync due to missing steamId or name:", player);
-                        }
-                    });
-                    const attendanceRef = database.ref(this.ATTENDANCE_DB_PATH);
-                    await attendanceRef.set(initialFirebaseState);
-                    console.log("Initial attendance state (keyed by steamId) synced to Firebase.");
-                } catch (firebaseError) {
-                    console.error("Failed to sync initial attendance state to Firebase:", firebaseError);
-                    // Show a message? Maybe not critical if render still works.
-                }
-            } else {
-                 console.error('Firebase database not available or ATTENDANCE_DB_PATH not set. Skipping initial Firebase sync.');
+            // If no players found, create default players
+            if (playersArray.length === 0) {
+                console.warn("No players found in Firebase, using default players");
+                // You can add default players here if needed
             }
-            // --- End Firebase Initial Sync --- 
 
-            // Initial Render: Call the UI update function AFTER fetch and initial sync are complete
-            // Rebuild the state object in the format expected by the original UI update function
-            // (The listener in *this* file expects { playerName: status })
+            // Update the global players array
+            players = playersArray;
+            console.log("Processed players from Firebase:", players);
+
+            // Fetch current attendance state from Firebase
+            const attendanceRef = database.ref(this.ATTENDANCE_DB_PATH);
+            const attendanceSnapshot = await attendanceRef.once('value');
+            const attendanceData = attendanceSnapshot.val() || {};
+
+            // Update attendance status for each player
+            players.forEach(player => {
+                if (player.steamId) {
+                    const steamIdStr = String(player.steamId);
+                    if (attendanceData[steamIdStr] && attendanceData[steamIdStr].status) {
+                        player.attendance = attendanceData[steamIdStr].status;
+                    }
+                }
+            });
+
+            // Ensure all players have an entry in the attendance state
+            const initialFirebaseState = {};
+            let needsSync = false;
+
+            players.forEach(player => {
+                if (player.steamId && player.name) {
+                    const steamIdStr = String(player.steamId);
+                    if (!attendanceData[steamIdStr]) {
+                        initialFirebaseState[steamIdStr] = {
+                            name: player.name,
+                            status: player.attendance || 'no_response'
+                        };
+                        needsSync = true;
+                    }
+                }
+            });
+
+            // Update Firebase with any missing players
+            if (needsSync) {
+                await attendanceRef.update(initialFirebaseState);
+                console.log("Updated Firebase with missing players");
+            }
+
+            // Prepare data for UI update
             const stateForLocalUI = {};
             players.forEach(player => {
-                 if(player.name) {
+                if (player.name) {
                     stateForLocalUI[player.name] = player.attendance || 'no_response';
-                 }
+                }
             });
+
+            // Update UI
             this.updateAttendanceUIFromFirebase(stateForLocalUI);
-            
-            // showMessage('Attendance data loaded!', 'success');
+
+            // Initialize emoji statuses
+            this.initializeEmojiStatuses();
+
+            showMessage('Attendance data loaded from Firebase!', 'success');
         } catch (err) {
-            console.error('Failed to fetch stats:', err);
+            console.error('Failed to fetch stats from Firebase:', err);
             showMessage(`Error loading data: ${err.message}`, 'error');
-            // REMOVED: this.renderPlayers(); // Render even on error - Listener handles UI
         } finally {
             spinner.classList.add('hidden');
             updateButton.disabled = false;
@@ -550,13 +568,12 @@ const Attendance = {
     },
 
     /**
-     * Sends an attendance update for a specific player to the Google Apps Script endpoint.
-     * Uses global `APPS_SCRIPT_URL`, `showMessage`.
+     * Updates a player's attendance status in Firebase.
      * @param {string} playerName - The name of the player to update.
      * @param {string} newAttendance - The new attendance status ('coming', 'not_coming', 'no_response').
      */
     syncAttendanceUpdate: async function(playerName, newAttendance) {
-        console.log(`Syncing update for ${playerName} to ${newAttendance} (Firebase & Sheet)`);
+        console.log(`Syncing attendance update for ${playerName} to ${newAttendance}`);
 
         // --- Find player ONCE at the beginning ---
         const player = players.find(p => p.name === playerName);
@@ -573,42 +590,29 @@ const Attendance = {
                 // Use steamIdStr directly
                 const playerStatusRef = database.ref(`${this.ATTENDANCE_DB_PATH}/${steamIdStr}/status`);
                 await playerStatusRef.set(newAttendance);
+
+                // Also update the player's attendance in the players array
+                player.attendance = newAttendance;
+
+                // Also update the player's status in the players node if it exists
+                const playerRef = database.ref(`players/${steamIdStr}`);
+                const playerSnapshot = await playerRef.once('value');
+                if (playerSnapshot.exists()) {
+                    await playerRef.update({
+                        attendance: newAttendance
+                    });
+                }
+
                 console.log(`Firebase attendance status updated for ${playerName} (ID: ${steamIdStr}).`);
+                showMessage(`Attendance updated for ${playerName}`, "success", 2000);
             } catch (firebaseError) {
                 console.error("Failed to update Firebase attendance status:", firebaseError);
                 showMessage(`Error syncing status for ${playerName} to database.`, "error");
-                // Decide if we should stop here or still try the sheet
-                // return; // Uncomment to stop if Firebase fails
             }
         } else {
-            console.warn('Firebase database not available. Skipping Firebase sync for attendance update.');
+            console.warn('Firebase database not available. Cannot update attendance.');
+            showMessage(`Error: Database not available`, "error");
         }
-        // --- End Firebase Update ---
-
-        // --- Update Google Sheet (existing logic) ---
-        try {
-            // Send the update request - no need to wait for or check response
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    steamId: steamIdStr,
-                    attendance: newAttendance
-                }),
-                // This will prevent fetch from throwing on redirects
-                redirect: 'follow'
-            });
-            
-            // Just assume it worked (which it apparently does)
-            console.log(`Sent sheet update for ${playerName}`);
-            
-        } catch (err) {
-            // Minimal error logging - no user-facing message
-            console.error("Error sending sheet update:", err);
-        }
-        // --- End Sheet Update ---
     },
 
     /**
@@ -618,15 +622,15 @@ const Attendance = {
      */
     handlePlayerListClick: async function(event) {
         console.log("Player list click detected", event.target);
-        
+
         // Handle attendance arrows/labels
         const targetAttendanceArrow = event.target.closest('.attendance-arrow');
         const targetAttendanceLabel = event.target.closest('.attendance-label');
-        
+
         if (targetAttendanceArrow || targetAttendanceLabel) {
             console.log("Attendance control clicked");
             let clickedElement = targetAttendanceArrow || targetAttendanceLabel;
-            
+
             const playerName = clickedElement.getAttribute('data-player');
             if (!playerName) return;
 
@@ -638,7 +642,7 @@ const Attendance = {
 
             // Get current state FROM THE UI
             const currentState = labelSpan.getAttribute('data-state') || 'no_response';
-            
+
             let direction = null; 
             if (targetAttendanceArrow) {
                 direction = targetAttendanceArrow.getAttribute('data-direction');
@@ -666,11 +670,11 @@ const Attendance = {
         // Handle emoji arrows/labels
         const targetEmojiArrow = event.target.closest('.emoji-arrow');
         const targetEmojiLabel = event.target.closest('.emoji-label');
-        
+
         if (targetEmojiArrow || targetEmojiLabel) {
             console.log("Emoji control clicked", targetEmojiArrow || targetEmojiLabel);
             let clickedElement = targetEmojiArrow || targetEmojiLabel;
-            
+
             const playerName = clickedElement.getAttribute('data-player');
             if (!playerName) {
                 console.warn("Missing data-player attribute on emoji control");
@@ -692,7 +696,7 @@ const Attendance = {
             // Get current emoji state FROM THE UI
             const currentState = labelSpan.getAttribute('data-state') || 'normal';
             console.log(`Current emoji state for ${playerName}: ${currentState}`);
-            
+
             let direction = null; 
             if (targetEmojiArrow) {
                 direction = targetEmojiArrow.getAttribute('data-direction');
@@ -721,8 +725,8 @@ const Attendance = {
     },
 
     /**
-     * NEW: Clears attendance and emoji states to defaults.
-     * Syncs changes to Firebase and Google Sheets.
+     * Clears attendance and emoji states to defaults.
+     * Syncs changes to Firebase.
      */
     clearAttendanceAndEmojis: async function() {
         const clearButton = document.getElementById('clear-attendance-button');
@@ -750,9 +754,8 @@ const Attendance = {
             const currentEmojiData = emojiSnapshot.val() || {};
 
             const firebaseUpdates = {};
-            const sheetUpdates = []; // Array to store { steamId, attendance } for POST
 
-            // 2. Iterate through global players list (contains sheet status)
+            // 2. Iterate through global players list
             for (const player of players) {
                 if (!player.steamId || !player.name) {
                     console.warn("Skipping player due to missing steamId or name:", player);
@@ -766,11 +769,11 @@ const Attendance = {
                 const targetEmoji = 'normal';
 
                 // Log the status being checked from the global players array
-                console.log(`Checking player: ${player.name}, Sheet Status: '${player.status}'`);
+                console.log(`Checking player: ${player.name}, Status: '${player.status}'`);
 
-                // Determine target attendance based on sheet status ('adam evde yok')
-                const sheetStatus = (player.status || '').trim().toLowerCase();
-                if (sheetStatus === 'adam evde yok') {
+                // Determine target attendance based on player status ('adam evde yok')
+                const playerStatus = (player.status || '').trim().toLowerCase();
+                if (playerStatus === 'adam evde yok') {
                     // Always set 'adam evde yok' players to 'not_coming' on clear
                     targetAttendance = 'not_coming';
                 } else {
@@ -781,9 +784,20 @@ const Attendance = {
                 // Prepare Firebase updates if changes are needed
                 if (targetAttendance !== currentAttendance) {
                     firebaseUpdates[`${this.ATTENDANCE_DB_PATH}/${steamIdStr}/status`] = targetAttendance;
-                    // Mark for sheet update
-                    sheetUpdates.push({ steamId: steamIdStr, attendance: targetAttendance });
+
+                    // Also update the player's attendance in the players array
+                    player.attendance = targetAttendance;
+
+                    // Also update the player's status in the players node if it exists
+                    const playerRef = database.ref(`players/${steamIdStr}`);
+                    const playerSnapshot = await playerRef.once('value');
+                    if (playerSnapshot.exists()) {
+                        await playerRef.update({
+                            attendance: targetAttendance
+                        });
+                    }
                 }
+
                 // Always ensure name is present in attendance data
                 if (!currentAttendanceData[steamIdStr]?.name) {
                      firebaseUpdates[`${this.ATTENDANCE_DB_PATH}/${steamIdStr}/name`] = player.name;
@@ -793,7 +807,7 @@ const Attendance = {
                     firebaseUpdates[`${this.EMOJI_DB_PATH}/${steamIdStr}/status`] = targetEmoji;
                 }
                 // Always ensure name is present in emoji data
-                 if (!currentEmojiData[steamIdStr]?.name) {
+                if (!currentEmojiData[steamIdStr]?.name) {
                      firebaseUpdates[`${this.EMOJI_DB_PATH}/${steamIdStr}/name`] = player.name;
                 }
             }
@@ -803,32 +817,11 @@ const Attendance = {
                 console.log("Applying Firebase updates:", firebaseUpdates);
                 await database.ref().update(firebaseUpdates);
                 console.log("Firebase updated successfully.");
+                showMessage('Attendance cleared successfully!', 'success');
             } else {
                 console.log("No Firebase updates needed.");
+                showMessage('No changes needed.', 'info');
             }
-
-            // 4. Perform Google Sheet updates (POST requests)
-            if (sheetUpdates.length > 0) {
-                console.log("Sending updates to Google Sheet:", sheetUpdates);
-                // Send updates concurrently
-                const sheetPromises = sheetUpdates.map(update =>
-                    fetch(APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(update),
-                        redirect: 'follow'
-                    }).catch(err => {
-                         // Log sheet errors but don't block completion
-                         console.error(`Error sending sheet update for ${update.steamId}:`, err);
-                     })
-                );
-                await Promise.all(sheetPromises);
-                console.log("Sheet updates sent.");
-            }
-
-            showMessage('Attendance cleared successfully!', 'success');
 
         } catch (error) {
             console.error('Error clearing attendance:', error);

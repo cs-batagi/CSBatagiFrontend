@@ -80,7 +80,7 @@ const TeamPicker = {
         ]).then(([kabileData, mapsData]) => {
             TeamPicker.populateKabileDropdowns(kabileData); // Populate options
             TeamPicker.populateMapDropdowns(mapsData);     // Populate options
-            
+
             // Initial population of available players - REMOVED
             // TeamPicker.updateAvailablePlayersList(); // Now handled by Firebase listener
 
@@ -247,12 +247,12 @@ const TeamPicker = {
             // Update the map and side selection dropdowns in the UI
             TeamPicker.updateMapSelectsFromFirebase(TeamPicker.mapSelections);
         });
-        
+
         // Listener for Available Players (if we decide to sync this list via Firebase)
         // this.dbRef.child('availablePlayers').on('value', (snapshot) => { ... });
         // For now, availablePlayers is derived locally and assignments are synced.
     },
-    
+
      /**
      * Sets up local UI event listeners that trigger Firebase writes
      */
@@ -272,7 +272,7 @@ const TeamPicker = {
              availablePlayersContainer.removeEventListener('click', TeamPicker.handleAvailableListClick); // Use new handler
              availablePlayersContainer.addEventListener('click', TeamPicker.handleAvailableListClick);
          }
-        
+
         // Player clicks (Team Lists - for removal)
         const teamAContainer = document.getElementById('team-a-players');
         const teamBContainer = document.getElementById('team-b-players');
@@ -284,18 +284,18 @@ const TeamPicker = {
             teamBContainer.removeEventListener('click', TeamPicker.handleTeamPlayerClick);
             teamBContainer.addEventListener('click', (e) => TeamPicker.handleTeamPlayerClick(e, 'b'));
         }
-        
+
         // NEW: Create Match Button Listener
         const createMatchBtn = document.getElementById('create-match-button');
         if (createMatchBtn) {
             createMatchBtn.addEventListener('click', TeamPicker.createMatchFromUI);
         }
-        
+
         // NEW: Player Stat Edit Modal Listeners
         const editModal = document.getElementById('edit-player-modal');
         const editForm = document.getElementById('edit-player-form');
         const cancelEditBtn = document.getElementById('cancel-player-edits-btn');
-        
+
         if (editForm) {
             // Use submit event for the form itself for save
             editForm.addEventListener('submit', TeamPicker.savePlayerEdits);
@@ -312,7 +312,7 @@ const TeamPicker = {
             });
         }
     },
-    
+
     /**
      * Handles changes to the Kabile select dropdowns. Writes to Firebase.
      * @param {'a' | 'b'} teamId - The team identifier ('a' or 'b').
@@ -393,7 +393,7 @@ const TeamPicker = {
                 });
         }
     },
-    
+
      /**
       * Handles clicks on players within Team A or Team B lists (for removal). Writes removal to Firebase.
       * @param {Event} event - The click event.
@@ -487,7 +487,7 @@ const TeamPicker = {
 
         // Clear container
         availablePlayersContainer.innerHTML = ''; // Clear previous content
-        
+
         if (Object.keys(TeamPicker.availablePlayers).length === 0) {
             availablePlayersContainer.innerHTML = '<div class="text-center py-4 text-gray-500">No players coming or attendance data missing.</div>';
             return;
@@ -540,7 +540,7 @@ const TeamPicker = {
         // After rendering, update rows based on current assignments
         TeamPicker.updateAssignedPlayersInAvailableList();
     },
-    
+
     /**
      * Updates the visual state of rows in the available players list 
      * based on current team assignments (TeamPicker.teamAPlayersData / TeamPicker.teamBPlayersData maps).
@@ -921,7 +921,7 @@ const TeamPicker = {
                             try {
                                 if (range && typeof range.min === 'number' && !isNaN(range.min) && typeof range.max === 'number' && !isNaN(range.max)) {
                                     const decimals = statKey.includes('ADR') ? 0 : (statKey.includes('HLTV') || statKey.includes('KD')) ? 2 : 1;
-                                    
+
                                     if (typeof decimals !== 'number' || isNaN(decimals) || decimals < 0) {
                                         console.warn(`Invalid decimals calculated (${decimals}) for statKey: ${statKey}. Using default label.`);
                                         return defaultLabel;
@@ -1036,7 +1036,7 @@ const TeamPicker = {
 
         const otherSide = (side === 't') ? 'ct' : 't';
         const otherSelectElement = document.getElementById(`map${mapIndex}-${otherSide}-team`);
-        
+
         const updates = {};
         updates[`maps/map${mapIndex}/${side}_team`] = selectedTeam;
 
@@ -1053,14 +1053,14 @@ const TeamPicker = {
         this.dbRef.update(updates)
              .catch(error => console.error(`Error updating Map ${mapIndex} sides:`, error));
     },
-    
+
     /**
      * Updates the display names (Team A/B or Kabile name) in map side selectors.
      */
     updateMapSideTeamNames: function() {
         const teamAName = TeamPicker.teamAName || 'Team A';
         const teamBName = TeamPicker.teamBName || 'Team B';
-        
+
         document.querySelectorAll('.map-container select option[value="A"]').forEach(opt => opt.textContent = teamAName);
         document.querySelectorAll('.map-container select option[value="B"]').forEach(opt => opt.textContent = teamBName);
     },
@@ -1091,7 +1091,7 @@ const TeamPicker = {
          const teamId = event.target.id.includes('-a-') ? 'a' : 'b';
          const selectedKabile = event.target.value;
          const teamHeader = document.querySelector(`#page-team_picker .team-container:nth-child(${teamId === 'a' ? 1 : 2}) h3`);
-         
+
          if (teamHeader) {
              teamHeader.textContent = selectedKabile || (teamId === 'a' ? 'Team A' : 'Team B');
          }
@@ -1143,18 +1143,18 @@ const TeamPicker = {
     populateKabileDropdowns: function(kabileData) {
         const teamAKabile = document.getElementById('team-a-kabile');
         const teamBKabile = document.getElementById('team-b-kabile');
-        
+
         if (!teamAKabile || !teamBKabile) return;
-        
+
         teamAKabile.innerHTML = '<option value="">Select Kabile</option>';
         teamBKabile.innerHTML = '<option value="">Select Kabile</option>';
-        
+
         kabileData.forEach(kabile => {
             const optionA = document.createElement('option');
             optionA.value = kabile;
             optionA.textContent = kabile;
             teamAKabile.appendChild(optionA);
-            
+
             const optionB = document.createElement('option');
             optionB.value = kabile;
             optionB.textContent = kabile;
@@ -1171,12 +1171,12 @@ const TeamPicker = {
             document.getElementById('map-2'),
             document.getElementById('map-3')
         ];
-        
+
         mapSelects.forEach(select => {
             if (!select) return;
-            
+
             select.innerHTML = '<option value="">Select Map</option>';
-            
+
             mapsData.forEach(map => {
                 const option = document.createElement('option');
                 option.value = map.id;
@@ -1185,7 +1185,7 @@ const TeamPicker = {
             });
         });
     },
-    
+
     /**
      * Merges player data with their stats (uses global stats arrays)
      * @param {Object} player - The player object with at least name and steamId.
@@ -1226,8 +1226,7 @@ const TeamPicker = {
     // ==================================================
 
     /**
-     * Gathers data from the UI state and attempts to create a match via API call
-     * (using a Cloudflare Worker proxy).
+     * Gathers data from the UI state and creates a match by storing it in Firebase.
      */
     createMatchFromUI: async function() {
         console.log("Attempting to create match...");
@@ -1243,7 +1242,7 @@ const TeamPicker = {
 
             if (!team1Object || !team2Object) {
                 // createTeamObjectForAPI will show specific errors
-                throw new Error("Failed to create team data for API.");
+                throw new Error("Failed to create team data.");
             }
 
             // --- 2. Get Map List ---
@@ -1292,31 +1291,29 @@ const TeamPicker = {
                 cvars: {
                     tv_enable: 1,
                     hostname: `${teamAName} vs ${teamBName}`
-                }
+                },
+                timestamp: firebase.database.ServerValue.TIMESTAMP, // Add timestamp
+                status: 'pending' // Add status
             };
 
             console.log("Match Object Payload:", JSON.stringify(matchObject, null, 2)); // Log for debugging
 
-            // --- 5. Make API Call via Cloudflare Worker ---
-            // IMPORTANT: Replace with your actual Worker URL!
-            const WORKER_URL = 'https://misty-snow-cebf.onur1atak.workers.dev/create-match'; 
-            const response = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Authorization header is removed - handled by the Worker
-                },
-                body: JSON.stringify(matchObject)
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error("API Error Response:", errorBody);
-                throw new Error(`Failed to create match via worker. Server responded with status ${response.status}. ${errorBody}`);
+            // --- 5. Store Match in Firebase ---
+            if (typeof database === 'undefined' || database === null) {
+                throw new Error("Firebase database not available");
             }
 
-            const result = await response.json(); // Assuming the worker forwards JSON
-            console.log("Match creation successful:", result);
+            // Create a new entry in the 'matches' collection with a unique ID
+            const matchesRef = database.ref('matches');
+            const newMatchRef = matchesRef.push();
+            await newMatchRef.set(matchObject);
+
+            const matchId = newMatchRef.key;
+            console.log("Match created in Firebase with ID:", matchId);
+
+            // Also update the current match ID in the team picker state
+            await database.ref(`${this.DB_PATH}/currentMatchId`).set(matchId);
+
             showMessage('Match created successfully!', 'success');
 
         } catch (error) {
@@ -1389,7 +1386,7 @@ const TeamPicker = {
         // Populate modal
         document.getElementById('edit-player-steamid').value = steamId;
         document.getElementById('modal-title').textContent = `Edit Stats for ${player.name} (Session Only)`;
-        
+
         const form = document.getElementById('edit-player-form');
         form.elements['L10_HLTV2'].value = player.stats.L10_HLTV2 ?? '';
         form.elements['L10_ADR'].value = player.stats.L10_ADR ?? '';
