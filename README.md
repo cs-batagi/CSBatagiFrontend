@@ -24,11 +24,11 @@ npm install
 ## GitHub Workflows
 
 - `stats.yml`: Updates statistics data in the frontend component
-- `deploy.yml`: Deploys the frontend to GitHub Pages
+- `jekyll-gh-pages.yml`: Deploys the frontend to GitHub Pages
 
 ## GitHub Pages Deployment
 
-The frontend is automatically deployed to GitHub Pages when changes are pushed to the main branch. The deployment workflow is defined in `.github/workflows/deploy.yml`. The workflow deploys the content of the `frontend` directory to the `gh-pages` branch, which is then served by GitHub Pages.
+The frontend is automatically deployed to GitHub Pages when changes are pushed to the main branch. The deployment workflow is defined in `.github/workflows/jekyll-gh-pages.yml`. The workflow deploys the content of the `frontend` directory to GitHub Pages, which is then served at the repository's GitHub Pages URL.
 
 ## Adding New Components
 

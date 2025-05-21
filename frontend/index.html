@@ -6,9 +6,9 @@
     <title>CS2 Stats Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../frontend/table-styles.css">
+    <link rel="stylesheet" href="table-styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" defer></script>
-    <link rel="manifest" href="../frontend/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
 </head>
 <body class="p-4 md:p-8">
@@ -18,7 +18,7 @@
   <div class="container mx-auto max-w-7xl"> <header class="relative mb-6">
             <div class="flex justify-between items-center border-b border-gray-300 pb-3">
                 <div class="flex items-center">
-                    <img src="../frontend/images/BatakLogo.png"
+                    <img src="images/BatakLogo.png"
                          alt="Gaming Group Logo"
                          class="h-10 w-10 mr-2 object-contain"
                          onerror="this.onerror=null; this.src='https://placehold.co/40x40/e0e0e0/333?text=Logo';">
@@ -995,16 +995,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-messaging-compat.js" defer></script>
 
     <!-- Core Application Logic -->
-    <script src="../frontend/scripts/MainScript.js" defer></script>
-    <script src="../frontend/scripts/auth.js" defer></script> <!-- Added Auth Script -->
-    <script src="../frontend/scripts/attendance.js" defer></script>
-    <script src="../frontend/scripts/statsTables.js" defer></script>
-    <script src="../frontend/scripts/sonMac.js" defer></script>
-    <script src="../frontend/scripts/duello.js" defer></script>
-    <script src="../frontend/scripts/teamPicker.js" defer></script>
-    <script src="../frontend/scripts/players.js" defer></script>
-    <script src="../frontend/scripts/performanceGraphs.js" defer></script>
-    <script src="../frontend/scripts/themeToggle.js" defer></script>
+    <script src="scripts/MainScript.js" defer></script>
+    <script src="scripts/auth.js" defer></script> <!-- Added Auth Script -->
+    <script src="scripts/attendance.js" defer></script>
+    <script src="scripts/statsTables.js" defer></script>
+    <script src="scripts/sonMac.js" defer></script>
+    <script src="scripts/duello.js" defer></script>
+    <script src="scripts/teamPicker.js" defer></script>
+    <script src="scripts/players.js" defer></script>
+    <script src="scripts/performanceGraphs.js" defer></script>
+    <script src="scripts/themeToggle.js" defer></script>
 
     <!-- Firebase SDKs (REMOVED FROM HERE) -->
     <!-- <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js" defer></script> -->
@@ -1013,7 +1013,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('../frontend/firebase-messaging-sw.js').then(function(registration) {
+          navigator.serviceWorker.register('firebase-messaging-sw.js').then(function(registration) {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
           }, function(err) {
             console.log('ServiceWorker registration failed: ', err);
