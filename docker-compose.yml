@@ -14,7 +14,7 @@ services:
     env_file:
       - path: .dns_secrets
         required: true
-      
+
   get5db:
     image: yobasystems/alpine-mariadb
     container_name: get5db
@@ -31,10 +31,9 @@ services:
     volumes:
       - ../get5/get5db/mysql:/var/lib/mysql
 
-  middleware:
+  backend:
     restart: always
-    build:
-      context: ./pg-mw  # Path to the directory containing the Dockerfile
+    image: ghcr.io/cs-batagi/monorepo/backend:latest  # Using the image from GitHub Container Registry
     environment:
       DB_HOST: postgres # Hostname matches the service name below
       DB_DATABASE: csdm
@@ -50,7 +49,7 @@ services:
       caddy.handle_path: /*
       caddy.handle_path.0_reverse_proxy: "{{upstreams 3000}}"
     depends_on:
-      - postgres  # Ensure the database is started before middleware
+      - postgres  # Ensure the database is started before backend 
 
   postgres:
     image: postgres
@@ -83,8 +82,7 @@ services:
 
 volumes:
   pgdata:
-    
+
 networks:
   db2:
     external: true
-
