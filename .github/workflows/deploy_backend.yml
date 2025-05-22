@@ -72,7 +72,8 @@ jobs:
           echo "BOT_TOKEN=$DISCORD_BOT_TOKEN" > .hayati_secrets
 
       - name: Create credentials.json file
-        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
 
       - name: Copy files to GCP VM
         run: |

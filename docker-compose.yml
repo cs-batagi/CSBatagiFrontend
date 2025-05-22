@@ -1,7 +1,6 @@
 services:
   ddns:
     image: favonia/cloudflare-ddns:latest
-    pull_policy: always  # Force Docker to pull the latest image every time
     network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
     restart: always # Restart the updater after reboot
     user: "1000:1000" # Run the updater with specific user and group IDs (in that order).
@@ -59,7 +58,6 @@ services:
 
   postgres:
     image: postgres
-    pull_policy: always  # Force Docker to pull the latest image every time
     restart: always
     ports:
       - 5432:5432

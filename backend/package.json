@@ -1,5 +1,5 @@
 {
-  "name": "pg-mw",
+  "name": "csbatagi-backend",
   "version": "1.0.0",
   "description": "A middleware for postgresql",
   "license": "ISC",
