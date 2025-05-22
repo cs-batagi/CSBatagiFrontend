@@ -1,4 +1,5 @@
-const { Compute } = require('@google-cloud/compute');
+// Import the Compute Engine client library
+const computeEngine = require('@google-cloud/compute').v1;
 const fs = require('fs');
 const path = require('path');
 
@@ -30,24 +31,42 @@ module.exports = class GcpManager {
     }
 
     // Initialize the Compute client
-    this.compute = new Compute({
-      projectId: JSON.parse(fs.readFileSync(credentialsPath, 'utf8')).project_id,
+    const projectId = JSON.parse(fs.readFileSync(credentialsPath, 'utf8')).project_id;
+    this.compute = new computeEngine.InstancesClient({
+      projectId: projectId,
       keyFilename: credentialsPath
     });
   }
 
   async startVm() {
     try {
-      const zone = this.compute.zone(this.zone);
-      const vm = zone.vm(this.vmName);
-
       console.log(`Starting VM: ${this.vmName} in zone: ${this.zone}`);
 
+      // Get the project ID from the credentials file
+      const credentialsPath = path.join(__dirname, '..', 'credentials.json');
+      const projectId = JSON.parse(fs.readFileSync(credentialsPath, 'utf8')).project_id;
+
+      // Create the request
+      const request = {
+        project: projectId,
+        zone: this.zone,
+        instance: this.vmName
+      };
+
       // Start the VM
-      const [operation] = await vm.start();
+      const [operation] = await this.compute.startInstance(request);
 
       // Wait for the operation to complete
-      await operation.promise();
+      const operationsClient = new computeEngine.ZoneOperationsClient({
+        projectId: projectId,
+        keyFilename: credentialsPath
+      });
+
+      await operationsClient.wait({
+        operation: operation.name,
+        project: projectId,
+        zone: this.zone
+      });
 
       console.log(`VM ${this.vmName} started successfully`);
       return { success: true, message: `VM ${this.vmName} started successfully` };
