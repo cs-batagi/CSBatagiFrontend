@@ -54,7 +54,7 @@ module.exports = class GcpManager {
       };
 
       // Start the VM
-      const [operation] = await this.compute.startInstance(request);
+      const [operation] = await this.compute.start(request);
 
       // Wait for the operation to complete
       const operationsClient = new computeEngine.ZoneOperationsClient({
