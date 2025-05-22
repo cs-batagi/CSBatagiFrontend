@@ -38,9 +38,10 @@ module.exports = class GcpManager {
     });
   }
 
-  async startVm() {
+  async performVmOperation(operationType) {
     try {
-      console.log(`Starting VM: ${this.vmName} in zone: ${this.zone}`);
+      const action = operationType === 'start' ? 'Starting' : 'Stopping';
+      console.log(`${action} VM: ${this.vmName} in zone: ${this.zone}`);
 
       // Get the project ID from the credentials file
       const credentialsPath = path.join(__dirname, '..', 'credentials.json');
@@ -53,8 +54,8 @@ module.exports = class GcpManager {
         instance: this.vmName
       };
 
-      // Start the VM
-      const [operation] = await this.compute.start(request);
+      // Perform the VM operation (start or stop)
+      const [operation] = await this.compute[operationType](request);
 
       // Wait for the operation to complete
       const operationsClient = new computeEngine.ZoneOperationsClient({
@@ -68,11 +69,20 @@ module.exports = class GcpManager {
         zone: this.zone
       });
 
-      console.log(`VM ${this.vmName} started successfully`);
-      return { success: true, message: `VM ${this.vmName} started successfully` };
+      const pastTense = operationType === 'start' ? 'started' : 'stopped';
+      console.log(`VM ${this.vmName} ${pastTense} successfully`);
+      return { success: true, message: `VM ${this.vmName} ${pastTense} successfully` };
     } catch (error) {
-      console.error('Error starting VM:', error);
+      console.error(`Error ${operationType}ing VM:`, error);
       return { success: false, error: error.message };
     }
+  }
+
+  async startVm() {
+    return this.performVmOperation('start');
+  }
+
+  async stopVm() {
+    return this.performVmOperation('stop');
   }
 }

@@ -128,6 +128,23 @@ app.post('/start-vm', async (req, res) => {
   }
 });
 
+// POST endpoint to stop a GCP VM
+app.post('/stop-vm', async (req, res) => {
+  try {
+    console.log('Stopping GCP VM');
+    const result = await gcpManager.stopVm();
+
+    if (result.success) {
+      res.json({ message: result.message });
+    } else {
+      res.status(500).json({ error: 'Failed to stop VM', details: result.error });
+    }
+  } catch (err) {
+    console.error('Error stopping VM:', err);
+    res.status(500).json({ error: 'Failed to stop VM', details: err.message });
+  }
+});
+
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
