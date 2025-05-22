@@ -5,9 +5,11 @@ const Ajv = require('ajv');
 const fs = require('fs');
 const path = require('path');
 const RconConnection = require('./rcon.js');
+const GcpManager = require('./gcp.js');
 
 
 const rconConnection = new RconConnection();
+const gcpManager = new GcpManager();
 
 const app = express();
 
@@ -109,9 +111,25 @@ app.get('/get-match', async (req, res) => {
   }
 });
 
+// POST endpoint to start a GCP VM
+app.post('/start-vm', async (req, res) => {
+  try {
+    console.log('Starting GCP VM');
+    const result = await gcpManager.startVm();
+
+    if (result.success) {
+      res.json({ message: result.message });
+    } else {
+      res.status(500).json({ error: 'Failed to start VM', details: result.error });
+    }
+  } catch (err) {
+    console.error('Error starting VM:', err);
+    res.status(500).json({ error: 'Failed to start VM', details: err.message });
+  }
+});
+
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Middleware is running on port ${port}`);
 });
-
