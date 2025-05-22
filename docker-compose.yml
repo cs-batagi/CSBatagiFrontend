@@ -33,7 +33,7 @@ services:
 
   backend:
     restart: always
-    image: ghcr.io/cs-batagi/monorepo/backend:latest  # Using the image from GitHub Container Registry
+    image: ghcr.io/csbatagi/monorepo/backend:latest  # Using the image from GitHub Container Registry with main branch tag
     environment:
       DB_HOST: postgres # Hostname matches the service name below
       DB_DATABASE: csdm
