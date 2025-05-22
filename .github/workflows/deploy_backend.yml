@@ -75,7 +75,7 @@ jobs:
             --zone=${{ secrets.GCP_ZONE }} \
             ./docker-compose.yml \
             ./.dns_secrets \
-            ./.mw_secrets \
+            ./.backend_secrets \
             ./.my_sql_secrets \
             ./.pg_secrets \
             ./.hayati_secrets \
@@ -86,9 +86,9 @@ jobs:
       - name: Set strict permissions on VM
         run: |
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
-            --command="chmod 600 ~/.dns_secrets ~/.mw_secrets ~/.my_sql_secrets ~/.pg_secrets"
+            --command="chmod 600 ~/.dns_secrets ~/.backend_secrets ~/.my_sql_secrets ~/.pg_secrets"
       - name: Cleanup local secrets (optional)
-        run: rm -f .dns_secrets .mw_secrets .my_sql_secrets .pg_secrets
+        run: rm -f .dns_secrets .backend_secrets .my_sql_secrets .pg_secrets
       - name: Start containers
         run: |
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
