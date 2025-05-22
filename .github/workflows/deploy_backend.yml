@@ -21,36 +21,23 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
-
-      # - name: Set up Terraform
-      #   uses: hashicorp/setup-terraform@v2
-
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           version: '>= 363.0.0'
 
-      # - name: Terraform Init & Apply
-      #   run: |
-      #     cd terraform
-      #     terraform init
-      #     terraform apply -auto-approve \
-      #       -var="gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
-      #       -var="vm_name=${{ secrets.GCP_VM_NAME }}" \
-      #       -var="service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}"
-      #
       - name: Create .dns_secrets file
         run: |
           echo "CLOUDFLARE_API_TOKEN=$CLOUDFLARE_TOKEN" > .dns_secrets
         env:
           CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Create .mw_secrets file
+      - name: Create .backend_secrets file
         run: |
-          echo "DB_PASSWORD=$DB_PASSWORD" > .mw_secrets
-          echo "AUTH_TOKEN=$AUTH_TOKEN" >> .mw_secrets
-          echo "DB_USER=$DB_USER" >> .mw_secrets
-          echo "RCON_PASSWORD=$RCON_PASSWORD" >> .mw_secrets
+          echo "DB_PASSWORD=$DB_PASSWORD" > .backend_secrets
+          echo "AUTH_TOKEN=$AUTH_TOKEN" >> .backend_secrets
+          echo "DB_USER=$DB_USER" >> .backend_secrets
+          echo "RCON_PASSWORD=$RCON_PASSWORD" >> .backend_secrets
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}

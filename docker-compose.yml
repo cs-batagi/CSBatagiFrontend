@@ -29,7 +29,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ../get5/get5db/mysql:/var/lib/mysql
+      - /srv/mysql:/var/lib/mysql
 
   backend:
     restart: always
@@ -38,7 +38,7 @@ services:
       DB_HOST: postgres # Hostname matches the service name below
       DB_DATABASE: csdm
     env_file:
-      - path: .mw_secrets
+      - path: .backend_secrets
         required: true
     networks:
       - db2
@@ -62,7 +62,7 @@ services:
       - path: .pg_secrets
         required: true
     volumes:
-     - ./pgdata:/var/lib/postgresql/data
+     - /srv/pgdata:/var/lib/postgresql/data
 
   caddy:
     image: lucaslorentz/caddy-docker-proxy:ci-alpine
