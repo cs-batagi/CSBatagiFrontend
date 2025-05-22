@@ -7,6 +7,7 @@ on:
 permissions:
   contents: 'read'
   id-token: 'write'  # Required for Workload Identity
+  packages: 'read'   # Required for GitHub Container Registry
 
 jobs:
   deploy:
@@ -89,10 +90,27 @@ jobs:
             --command="chmod 600 ~/.dns_secrets ~/.backend_secrets ~/.my_sql_secrets ~/.pg_secrets"
       - name: Cleanup local secrets (optional)
         run: rm -f .dns_secrets .backend_secrets .my_sql_secrets .pg_secrets
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Docker config for GitHub Container Registry
+        run: |
+          mkdir -p ~/.docker
+          echo '{"auths":{"ghcr.io":{"auth":"'$(echo -n "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" | base64)'"}}}' > ~/.docker/config.json
+
+      - name: Copy Docker config to VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ~/.docker/config.json \
+            ${{ secrets.GCP_VM_NAME }}:~/.docker/config.json \
+            --ssh-key-expire-after=1m
+
       - name: Start containers
         run: |
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
             --command="sudo docker compose -f ~/docker-compose.yml up -d"
-
-
-
