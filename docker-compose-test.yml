@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  backend:
+    restart: always
+    build:
+      context: ./backend
+    environment:
+      DB_HOST: postgres
+      DB_DATABASE: csdm
+      VM_NAME: cs2-server
+      GCP_ZONE: europe-west3-c
+    env_file:
+      - path: .backend_secrets
+        required: true
+    volumes:
+      - ./credentials.json:/app/../credentials.json
+    expose:
+      - 3000
+    depends_on:
+      - postgres
+    networks:
+      - test-network
+
+  postgres:
+    image: postgres
+    restart: always
+    expose:
+      - 5432
+    env_file:
+      - path: .pg_secrets
+        required: true
+    volumes:
+     - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - test-network
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy-reverse-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./frontend:/srv/frontend # Mount frontend files
+      - ./TestCaddyfile:/etc/caddy/Caddyfile
+
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CADDY_INGRESS_NETWORKS=test-network
+
+    networks:
+      - test-network
+
+
+networks:
+  test-network:
+    driver: bridge
