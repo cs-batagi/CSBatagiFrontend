@@ -9,7 +9,7 @@ services:
     cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
     security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
     environment:
-      - DOMAINS=csbatagi.com
+      - DOMAINS=csbatagi.com,db2.csbatagi.com # Comma-separated list of domains to update
       - PROXIED=false # Tell Cloudflare to cache webpages and hide your IP (optional)
     env_file:
       - path: .dns_secrets
