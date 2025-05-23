@@ -3,11 +3,10 @@ name: Deploy to GCP (Backend and Frontend)
 on:
   push:
     branches: [main]
-    paths:
-      - 'backend/**'
-      - 'frontend/**'
-      - '.github/workflows/deploy_backend.yml'
-      - 'docker-compose.yml'
+    paths-ignore:
+      - '**/README**'
+      - '**/test**'
+      - '**/Test**'
 
 permissions:
   contents: 'read'
