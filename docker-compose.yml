@@ -74,6 +74,8 @@ services:
       - db2 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./frontend:/srv/frontend
     ports:
       - 80:80
       - 443:443
