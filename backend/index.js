@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const RconConnection = require('./rcon.js');
 const GcpManager = require('./gcp.js');
+const { executeStatsUpdate } = require('./update-stats');
 
 
 const rconConnection = new RconConnection();
@@ -142,6 +143,33 @@ app.post('/stop-vm', async (req, res) => {
   } catch (err) {
     console.error('Error stopping VM:', err);
     res.status(500).json({ error: 'Failed to stop VM', details: err.message });
+  }
+});
+
+// API endpoint to serve season average data
+app.get('/api/season-avg', async (req, res) => {
+  try {
+    const query = `SELECT * FROM season_avg`; // Replace with your actual query
+    const result = await pool.query(query);
+
+    res.json({
+      columns: result.fields.map(field => field.name),
+      rows: result.rows
+    });
+  } catch (err) {
+    console.error('Error fetching season average data:', err);
+    res.status(500).json({ error: 'Failed to fetch season average data.' });
+  }
+});
+
+// Endpoint to trigger stats update
+app.post('/api/update-stats', async (req, res) => {
+  try {
+    await executeStatsUpdate();
+    res.json({ message: 'Stats updated successfully.' });
+  } catch (err) {
+    console.error('Error triggering stats update:', err);
+    res.status(500).json({ error: 'Failed to update stats.' });
   }
 });
 

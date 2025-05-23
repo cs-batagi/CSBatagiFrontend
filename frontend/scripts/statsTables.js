@@ -274,7 +274,7 @@ const StatsTables = (() => {
         }
         tbody.innerHTML = `<tr><td colspan="${commonColumns.length}" class="text-center py-4 text-gray-500">Loading season data...</td></tr>`;
 
-        seasonStats = await fetchJsonData(SEASON_AVG_JSON_URL, 'Season Average');
+        seasonStats = await fetchJsonData(SEASON_AVG_JSON_URL, 'Season Average'); // Fetch data from backend API
         if (seasonStats) {
              // Initial render
             fillSeasonAvgTable(seasonStats, tbody);
