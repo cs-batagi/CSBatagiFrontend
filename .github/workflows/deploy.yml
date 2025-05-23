@@ -139,4 +139,4 @@ jobs:
       - name: Start containers
         run: |
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
-            --command="sudo docker compose -f ~/docker-compose.yml up -d"
+            --command="sudo docker compose -f ~/docker-compose.yml up -d --force-recreate"
