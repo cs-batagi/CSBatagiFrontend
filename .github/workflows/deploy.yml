@@ -96,7 +96,7 @@ jobs:
           gcloud compute scp \
             --zone=${{ secrets.GCP_ZONE }} \
             ./frontend \
-            ${{ secrets.GCP_VM_NAME }}:~/frontend \
+            ${{ secrets.GCP_VM_NAME }}:~/ \
             --recurse \
             --ssh-key-expire-after=1m
 
