@@ -39,7 +39,6 @@ services:
     image: caddy:latest
     container_name: caddy-reverse-proxy
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./frontend:/srv/frontend # Mount frontend files
       - ./TestCaddyfile:/etc/caddy/Caddyfile
 

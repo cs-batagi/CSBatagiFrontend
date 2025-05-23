@@ -66,14 +66,12 @@ services:
      - /srv/pgdata:/var/lib/postgresql/data
 
   caddy:
-    image: lucaslorentz/caddy-docker-proxy:ci-alpine
-    pull_policy: always  # Force Docker to pull the latest image every time
+    image: caddy:latest 
     container_name: caddy-reverse-proxy
     restart: unless-stopped
     networks:
       - db2 
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./frontend:/srv/frontend
     ports:
