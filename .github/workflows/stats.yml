@@ -1,38 +1,41 @@
-name: Update CS:GO Stats
+name: Update Stats
 
 on:
   # Comment out schedule for now until testing is complete
   # schedule:
   #   # Run twice a week (Monday and Thursday at 3 AM UTC)
   #   - cron: '0 3 * * 1,4'
+  #   paths:
+  #     - 'frontend/**'
+  #     - '.github/workflows/stats.yml'
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
 jobs:
   update-stats:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-      
+
       - name: Install dependencies
-        run: npm ci 
-      
+        run: cd frontend && npm ci 
+
       - name: Run stats update script
         env:
           MW_TOKEN: ${{ secrets.MW_TOKEN }}
-        run: node scripts/update-stats.js
-      
+        run: cd frontend && node scripts/update-stats.js
+
       - name: Commit and push if changes
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions Bot"
-          git add data/season_avg.json data/last10.json data/night_avg.json data/sonmac_by_date.json data/duello_sezon.json data/duello_son_mac.json data/performance_data.json
+          git add frontend/data/season_avg.json frontend/data/last10.json frontend/data/night_avg.json frontend/data/sonmac.json frontend/data/duello_sezon.json frontend/data/duello_son_mac.json frontend/data/performance_data.json
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update stats data [skip ci]"
           git push 

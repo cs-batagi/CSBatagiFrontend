@@ -1,0 +1,141 @@
+name: Deploy to GCP (Backend and Frontend)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/README**'
+      - '**/test**'
+      - '**/Test**'
+
+permissions:
+  contents: 'read'
+  id-token: 'write'  # Required for Workload Identity
+  packages: 'read'   # Required for GitHub Container Registry
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: '>= 363.0.0'
+
+      - name: Create .dns_secrets file
+        run: |
+          echo "CLOUDFLARE_API_TOKEN=$CLOUDFLARE_TOKEN" > .dns_secrets
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Create .backend_secrets file
+        run: |
+          echo "DB_PASSWORD=$DB_PASSWORD" > .backend_secrets
+          echo "AUTH_TOKEN=$AUTH_TOKEN" >> .backend_secrets
+          echo "DB_USER=$DB_USER" >> .backend_secrets
+          echo "RCON_PASSWORD=$RCON_PASSWORD" >> .backend_secrets
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          DB_USER: ${{ secrets.DB_USER }}
+          RCON_PASSWORD: ${{ secrets.RCON_PASSWORD }}
+
+      - name: Create .my_sql_secrets file
+        run: |
+          echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" > .my_sql_secrets
+          echo "MYSQL_USER=$MYSQL_USER" >> .my_sql_secrets
+          echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> .my_sql_secrets
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+
+      - name: Create .pg_secrets file
+        run: |
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" > .pg_secrets
+          echo "POSTGRES_READONLY_PASSWORD=$POSTGRES_READONLY_PASSWORD" >> .pg_secrets
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_READONLY_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
+
+      - name: Create .hayati_secrets file
+        run: |
+          echo "BOT_TOKEN=$DISCORD_BOT_TOKEN" > .hayati_secrets
+
+      - name: Create credentials.json file
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
+
+      - name: Copy files to GCP VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ./Caddyfile \
+            ./docker-compose.yml \
+            ./.dns_secrets \
+            ./.backend_secrets \
+            ./.my_sql_secrets \
+            ./.pg_secrets \
+            ./.hayati_secrets \
+            ./credentials.json \
+            ${{ secrets.GCP_VM_NAME }}:~/ \
+            --ssh-key-expire-after=1m  # Short-lived key for security
+
+      - name: Copy frontend files to GCP VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ./frontend \
+            ${{ secrets.GCP_VM_NAME }}:~/frontend \
+            --recurse \
+            --ssh-key-expire-after=1m
+
+      - name: Set strict permissions on VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="chmod 600 ~/.dns_secrets ~/.backend_secrets ~/.my_sql_secrets ~/.pg_secrets"
+      - name: Cleanup local secrets (optional)
+        run: rm -f .dns_secrets .backend_secrets .my_sql_secrets .pg_secrets
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Docker config for GitHub Container Registry
+        run: |
+          mkdir -p ~/.docker
+          echo '{"auths":{"ghcr.io":{"auth":"'$(echo -n "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" | base64)'"}}}' > ~/.docker/config.json
+
+      - name: Create .docker directories on VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="mkdir -p ~/.docker && sudo mkdir -p /root/.docker"
+
+      - name: Copy Docker config to VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ~/.docker/config.json \
+            ${{ secrets.GCP_VM_NAME }}:~/.docker/config.json \
+            --ssh-key-expire-after=1m
+
+      - name: Copy Docker config to root user on VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="sudo cp ~/.docker/config.json /root/.docker/config.json"
+
+      - name: Start containers
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="sudo docker compose -f ~/docker-compose.yml up -d"
