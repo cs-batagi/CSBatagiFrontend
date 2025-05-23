@@ -1,10 +1,11 @@
-name: Deploy to GCP
+name: Deploy to GCP (Backend and Frontend)
 
 on:
   push:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'frontend/**'
       - '.github/workflows/deploy_backend.yml'
       - 'docker-compose.yml'
 
@@ -79,6 +80,7 @@ jobs:
         run: |
           gcloud compute scp \
             --zone=${{ secrets.GCP_ZONE }} \
+            ./Caddyfile \
             ./docker-compose.yml \
             ./.dns_secrets \
             ./.backend_secrets \
@@ -88,6 +90,15 @@ jobs:
             ./credentials.json \
             ${{ secrets.GCP_VM_NAME }}:~/ \
             --ssh-key-expire-after=1m  # Short-lived key for security
+
+      - name: Copy frontend files to GCP VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ./frontend \
+            ${{ secrets.GCP_VM_NAME }}:~/frontend \
+            --recurse \
+            --ssh-key-expire-after=1m
 
       - name: Set strict permissions on VM
         run: |

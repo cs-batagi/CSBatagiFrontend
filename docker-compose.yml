@@ -2,14 +2,14 @@ services:
   ddns:
     image: favonia/cloudflare-ddns:latest
     network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
-    restart: always # Restart the updater after reboot
+    restart: unless-stopped # Restart the updater after reboot
     user: "1000:1000" # Run the updater with specific user and group IDs (in that order).
     # You can change the two numbers based on your need.
     read_only: true # Make the container filesystem read-only (optional but recommended)
     cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
     security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
     environment:
-      - DOMAINS=db2.csbatagi.com
+      - DOMAINS=csbatagi.com
       - PROXIED=false # Tell Cloudflare to cache webpages and hide your IP (optional)
     env_file:
       - path: .dns_secrets
@@ -18,7 +18,7 @@ services:
   get5db:
     image: yobasystems/alpine-mariadb
     container_name: get5db
-    restart: always
+    restart: unless-stopped 
     environment:
       - MYSQL_DATABASE=get5
       - MYSQL_CHARSET=utf8mb4
@@ -32,7 +32,7 @@ services:
       - /srv/mysql:/var/lib/mysql
 
   backend:
-    restart: always
+    restart: unless-stopped 
     image: ghcr.io/csbatagi/monorepo/backend:latest  # Using the image from GitHub Container Registry with main branch tag
     pull_policy: always  # Force Docker to pull the latest image every time
     environment:
@@ -47,18 +47,14 @@ services:
       - ./credentials.json:/app/../credentials.json
     networks:
       - db2
-    ports:
-      - 3000:3000
-    labels:
-      caddy: db2.csbatagi.com 
-      caddy.handle_path: /*
-      caddy.handle_path.0_reverse_proxy: "{{upstreams 3000}}"
+    expose:
+      - 3000
     depends_on:
       - postgres  # Ensure the database is started before backend 
 
   postgres:
     image: postgres
-    restart: always
+    restart: unless-stopped 
     ports:
       - 5432:5432
     networks:
@@ -83,9 +79,7 @@ services:
       - 443:443
     environment:
       - CADDY_INGRESS_NETWORKS=db2
-    labels:
-      caddy.email: csbatagi@gmail.com
-
+    
 volumes:
   pgdata:
 
