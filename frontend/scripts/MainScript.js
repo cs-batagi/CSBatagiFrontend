@@ -6,9 +6,9 @@
 // --- Constants ---
 const APPS_SCRIPT_URL = 'https://royal-flower-aa89.onur1atak.workers.dev/'; // Replace with your actual URL
 const DEFAULT_PAGE = 'home'; 
-const SEASON_AVG_JSON_URL = 'data/season_avg.json';
-const LAST10_JSON_URL = 'data/last10.json';
-const NIGHT_AVG_JSON_URL = 'data/night_avg.json';
+const SEASON_AVG_JSON_URL = 'data/season_avg.json?_cb=' + Date.now();
+const LAST10_JSON_URL = 'data/last10.json?_cb=' + Date.now();
+const NIGHT_AVG_JSON_URL = 'data/night_avg.json?_cb=' + Date.now();
 // const SONMAC_JSON_URL = 'data/sonmac.json'; // MOVED to sonMac.js
 // const DUELLO_JSON_URL = 'data/duello_son_mac.json'; // MOVED to duello.js
 // const DUELLO_SEZON_JSON_URL = 'data/duello_sezon.json'; // MOVED to duello.js
@@ -495,67 +495,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- End Firebase Initialization ---
 
-    // --- Firebase Messaging (Push Notifications) ---
-    if (window.firebase && firebase.messaging) {
-      const messaging = firebase.messaging();
-
-      navigator.serviceWorker.register('firebase-messaging-sw.js').then(function(registration) {
-        // Always request notification permission on page load
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            getTokenAndLog(registration);
-          } else {
-            console.log('Notification permission not granted:', permission);
-          }
-        });
-      });
-
-      function getTokenAndLog(registration) {
-        messaging.getToken({
-          vapidKey: 'BOBSX1e7RIaNamSRVADSxWzasn6IXp2Q7QH0wqsi856l1bdairiUTC5IBqIe7gpdgnwK9dTqyAk-aYMV7r19a20',
-          serviceWorkerRegistration: registration
-        }).then((currentToken) => {
-          if (currentToken) {
-
-            // Store the token in the database for push notifications (silently)
-            if (database) {
-              database.ref('fcmTokens/' + currentToken).set(true)
-                .catch((dbError) => {
-                  // Log only if database save fails
-                  console.error('Error saving FCM Token to DB:', dbError);
-                });
-            } else {
-              // Log only if database object is missing
-              console.error('DB not initialized, cannot save FCM token.');
-            }
-          } else {
-            // Keep this log: Important for knowing why no token was generated
-            console.log('No registration token available. Request permission to generate one.');
-          }
-        }).catch((err) => {
-          // Keep this log: Important for token retrieval errors (like the 401)
-          console.log('An error occurred while retrieving token. ', err);
-        });
-      }
-
-      // Foreground message handler
-      messaging.onMessage((payload) => {
-        console.log('Message received. ', payload);
-        if (Notification.permission === 'granted' && payload.notification) {
-          new Notification(payload.notification.title, {
-            body: payload.notification.body,
-            icon: '/images/BatakLogo192.png'
-          });
-        }
-      });
-    }
-
     showPage(DEFAULT_PAGE); // Show the initial page
     Attendance.init(); // Initialize Attendance module
     StatsTables.init(); // Initialize StatsTables module
     SonMac.init(); // Initialize SonMac module
     Duello.init(); // Initialize Duello module
-    adjustNavLayout(); // Set initial navigation visibility
+    adjustNavLayout(); // Set initial navigation visibility - RE-ENABLED
     setupGlobalEventListeners(); // Setup global event listeners
 });
 
@@ -637,7 +582,7 @@ function setupGlobalEventListeners() {
         });
     }
 
-    window.addEventListener('resize', adjustNavLayout); // Responsive nav
+    window.addEventListener('resize', adjustNavLayout); // Responsive nav - RE-ENABLED
 
 }
 
@@ -656,7 +601,7 @@ function handleNavLinkClick(event) {
 
 // Adjust nav layout on resize/load
 function adjustNavLayout() {
-    if (window.innerWidth >= 768) { // Tailwind's md breakpoint is 768px
+    if (window.innerWidth >= 768) { // Tailwind's md breakpoint is 768px - RESTORED
         navLinksContainer.classList.remove('hidden', 'mobile-menu-active');
         menuButton.setAttribute('aria-expanded', 'false');
         iconHamburger.classList.remove('hidden');

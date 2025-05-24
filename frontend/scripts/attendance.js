@@ -434,7 +434,7 @@ const Attendance = {
         // Removed spinner/button logic - these elements should be removed from HTML
         try {
             // Fetch player list from the local JSON file
-            const response = await fetch('./data/players.json'); 
+            const response = await fetch('./data/players.json?_cb=' + Date.now()); 
             if (!response.ok) {
                 // Handle potential fetch errors (e.g., file not found)
                 throw new Error(`HTTP error! Status: ${response.status} fetching players.json`);
@@ -781,13 +781,28 @@ const Attendance = {
                 }
             }
 
+            // --- Add Team Picker Resets ---
+            const teamPickerDBPath = 'teamPickerState'; 
+
+            // Reset Kabile names
+            firebaseUpdates[`${teamPickerDBPath}/teamA/kabile`] = "";
+            firebaseUpdates[`${teamPickerDBPath}/teamB/kabile`] = "";
+
+            // Reset Map selections
+            for (let i = 1; i <= 3; i++) {
+                firebaseUpdates[`${teamPickerDBPath}/maps/map${i}/mapName`] = "";
+                firebaseUpdates[`${teamPickerDBPath}/maps/map${i}/t_team`] = "";
+                firebaseUpdates[`${teamPickerDBPath}/maps/map${i}/ct_team`] = "";
+            }
+            // --- End Team Picker Resets ---
+
             // 4. Perform Firebase update
             if (Object.keys(firebaseUpdates).length > 0) {
-                console.log("Applying Firebase updates for clear:", firebaseUpdates);
+                console.log("Applying Firebase updates for clear (including team picker):", firebaseUpdates);
                 await database.ref().update(firebaseUpdates);
-                console.log("Firebase updated successfully during clear.");
+                console.log("Firebase updated successfully during clear (including team picker).");
             } else {
-                console.log("No Firebase updates needed for clear.");
+                console.log("No Firebase updates needed for clear (attendance, emoji, or team picker).");
             }
 
             // 5. Perform Google Sheet updates (POST requests)

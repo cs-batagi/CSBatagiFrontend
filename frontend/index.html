@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS2 Stats Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="table-styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" defer></script>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <link id="main-css" rel="stylesheet" href="table-styles.css">
+    <script id="chartjs" src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" defer></script>
 </head>
 <body class="p-4 md:p-8">
   <!-- 
@@ -18,23 +19,23 @@
   <div class="container mx-auto max-w-7xl"> <header class="relative mb-6">
             <div class="flex justify-between items-center border-b border-gray-300 pb-3">
                 <div class="flex items-center">
-                    <img src="images/BatakLogo.png"
+                    <img id="logo-image" src="images/BatakLogo.png"
                          alt="Gaming Group Logo"
                          class="h-10 w-10 mr-2 object-contain"
                          onerror="this.onerror=null; this.src='https://placehold.co/40x40/e0e0e0/333?text=Logo';">
-                    <a id="header-home-link" href="#" data-page-target="home"> <h1 class="text-2xl md:text-3xl font-bold text-blue-700">CS Batağı Gururla Sunar</h1>
+                    <a id="header-home-link" href="#" data-page-target="home"> <h1 style="display: none;" class="md:!block text-2xl md:text-3xl font-bold text-blue-700">CS Batağı Gururla Sunar</h1>
                     </a>
                 </div>
-
-                <!-- Container for Auth and Theme Toggle -->
-                <div class="flex items-center space-x-4">
-                    <!-- Paste the auth-container here, modified -->
+                
+                <!-- Container for Auth, Theme Toggle, AND Mobile Menu Button -->
+                <div class="flex items-center space-x-1 sm:space-x-2 md:space-x-4"> <!-- Right Group -->
+                    <!-- Auth Container -->
                     <div id="auth-container" class="flex items-center space-x-4">
                       <button id="google-signin-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         Sign in with Google
                       </button>
-                      <div id="user-info" class="hidden items-center space-x-2">
-                        <span id="user-name" class="font-medium"></span>
+                      <div id="user-info" class="hidden flex flex-col items-start space-y-1 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0"> <!-- Initially hidden -->
+                        <span id="user-name" class="font-medium"></span> <!-- User name: "CS Batagi" in image -->
                         <button id="signout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
                           Sign Out
                         </button>
@@ -194,17 +195,17 @@
                             <div class="text-center py-4 text-gray-500">Loading available players...</div>
                         </div>
                     </div>
-
+                    
                     <!-- Team Selection Section -->
                     <div class="lg:col-span-3 page-content-container">
                         <h2 class="text-2xl font-semibold mb-4 text-blue-600">Team Selection</h2>
-
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Team A -->
                             <div class="team-container">
                                 <div class="bg-blue-100 p-2 rounded-lg mb-4">
                                     <h3 class="text-xl font-semibold text-blue-600 mb-2">Team A</h3>
-
+                                    
                                     <div class="mb-3">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Kabile</label>
                                         <select id="team-a-kabile" class="form-select w-full rounded-md border-gray-300 shadow-sm">
@@ -212,19 +213,19 @@
                                             <!-- Options will be populated from JSON data -->
                                         </select>
                                     </div>
-
+                                    
                                     <!-- Team A Players -->
                                     <div id="team-a-players" class="team-list bg-blue-50 border border-blue-200 rounded shadow-sm min-h-[100px] overflow-y-auto">
                                         <!-- Player rows will be added here -->
                                     </div>
                                 </div>
                             </div>
-
+                            
                             <!-- Team B -->
                             <div class="team-container">
                                 <div class="bg-green-100 p-2 rounded-lg mb-4">
                                     <h3 class="text-xl font-semibold text-green-600 mb-2">Team B</h3>
-
+                                    
                                     <div class="mb-3">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Kabile</label>
                                         <select id="team-b-kabile" class="form-select w-full rounded-md border-gray-300 shadow-sm">
@@ -232,7 +233,7 @@
                                             <!-- Options will be populated from JSON data -->
                                         </select>
                                     </div>
-
+                                    
                                     <!-- Team B Players -->
                                     <div id="team-b-players" class="team-list bg-green-50 border border-green-200 rounded shadow-sm min-h-[100px] overflow-y-auto">
                                         <!-- Player rows will be added here -->
@@ -240,7 +241,7 @@
                                 </div>
                             </div>
                         </div>
-
+                        
                         <!-- NEW: Team Stats Difference Section -->
                         <div id="team-stats-diff" class="mt-4 p-3 border border-gray-300 rounded bg-gray-50 text-xs shadow-sm">
                             <h4 class="font-semibold mb-2 text-center text-sm text-gray-700">Stat Difference (A vs B)</h4>
@@ -304,7 +305,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                
                                 <!-- Map 2 -->
                                 <div class="map-container p-3 border rounded-lg bg-gray-50 text-sm">
                                     <h4 class="font-medium mb-2 text-base">Map 2</h4>
@@ -333,7 +334,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                
                                 <!-- Map 3 -->
                                 <div class="map-container p-3 border rounded-lg bg-gray-50 text-sm">
                                     <h4 class="font-medium mb-2 text-base">Map 3</h4>
@@ -386,6 +387,15 @@
             </div>
             <div id="page-sonmac" class="page-content hidden page-content-container">
                 <h2 class="text-2xl font-semibold text-blue-600 mb-4">Son Maç</h2>
+                
+                <!-- Date Selector for Son Mac -->
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50 shadow-sm">
+                    <label for="sonmac-date-selector" class="block text-sm font-medium text-gray-700 mb-1">Tarih Seçin:</label>
+                    <select id="sonmac-date-selector" class="form-select block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option>Tarihler yükleniyor...</option>
+                    </select>
+                </div>
+                <!-- End Date Selector -->
 
                 <!-- Map tabs navigation -->
                 <div class="mb-4 border-b border-gray-200">
@@ -393,7 +403,7 @@
                         <!-- Map tabs will be dynamically generated here -->
                     </ul>
                 </div>
-
+                
                 <!-- Map tab content -->
                 <div id="mapTabContent">
                     <!-- Map content will be dynamically generated here -->
@@ -401,6 +411,12 @@
             </div>
             <div id="page-gece_ortalama" class="page-content hidden page-content-container">
                 <h2 class="text-2xl font-semibold text-blue-600 mb-4">Gece Ortalaması</h2>
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50 shadow-sm">
+                    <label for="night-avg-date-selector" class="block text-sm font-medium text-gray-700 mb-1">Tarih Seçin:</label>
+                    <select id="night-avg-date-selector" class="form-select block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option>Tarihler yükleniyor...</option>
+                    </select>
+                </div>
                 <!-- Sub Tab Navigation -->
                 <div class="mb-4 border-b border-gray-200">
                     <ul id="night-avg-sub-tabs" class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
@@ -481,7 +497,7 @@
                         </div>
                     </div>
                     <!-- Head-to-Head Content (Initially Hidden) -->
-                    <div id="night-avg-tab-head2head" class="night-avg-tab-pane" role="tabpanel" aria-labelledby="night-avg-head2head-tab">
+                    <div id="night-avg-tab-head2head" class="night-avg-tab-pane hidden" role="tabpanel" aria-labelledby="night-avg-head2head-tab">
                         <!-- Player Selection -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
@@ -605,7 +621,7 @@
                         </div>
                     </div>
                     <!-- Head-to-Head Content (Initially Hidden) -->
-                    <div id="last10-tab-head2head" class="last10-tab-pane" role="tabpanel" aria-labelledby="last10-head2head-tab">
+                    <div id="last10-tab-head2head" class="last10-tab-pane hidden" role="tabpanel" aria-labelledby="last10-head2head-tab">
                         <!-- Player Selection -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
@@ -734,7 +750,7 @@
                         </div>
                     </div>
                     <!-- Head-to-Head Content (Initially Hidden) -->
-                    <div id="season-avg-tab-head2head" class="season-avg-tab-pane" role="tabpanel" aria-labelledby="season-avg-head2head-tab">
+                    <div id="season-avg-tab-head2head" class="season-avg-tab-pane hidden" role="tabpanel" aria-labelledby="season-avg-head2head-tab">
                         <!-- Player Selection -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
@@ -930,7 +946,7 @@
                 <p class="text-sm text-gray-500 mb-4">Changes only apply to this team picking session.</p>
                 <form id="edit-player-form" class="mt-2 space-y-3">
                     <input type="hidden" id="edit-player-steamid">
-
+                    
                     <div class="grid grid-cols-2 gap-4 text-left">
                         <div>
                             <label for="edit-L10_HLTV2" class="block text-sm font-medium text-gray-700">L10 HLTV</label>
@@ -957,7 +973,7 @@
                             <input type="text" inputmode="decimal" id="edit-S_KD" name="S_KD" class="mt-1 form-input w-full rounded-md border-gray-300 shadow-sm">
                         </div>
                     </div>
-
+                
                     <div class="items-center px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button id="save-player-edits-btn" type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
                             Save Changes
@@ -989,37 +1005,53 @@
     -->
 
     <!-- Firebase SDKs (Load BEFORE MainScript) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js" defer></script> <!-- Added Auth SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-messaging-compat.js" defer></script>
+    <script id="firebase-app" src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js" defer></script>
+    <script id="firebase-auth" src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js" defer></script> <!-- Added Auth SDK -->
+    <script id="firebase-db" src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js" defer></script>
 
     <!-- Core Application Logic -->
-    <script src="scripts/MainScript.js" defer></script>
-    <script src="scripts/auth.js" defer></script> <!-- Added Auth Script -->
-    <script src="scripts/attendance.js" defer></script>
-    <script src="scripts/statsTables.js" defer></script>
-    <script src="scripts/sonMac.js" defer></script>
-    <script src="scripts/duello.js" defer></script>
-    <script src="scripts/teamPicker.js" defer></script>
-    <script src="scripts/players.js" defer></script>
-    <script src="scripts/performanceGraphs.js" defer></script>
-    <script src="scripts/themeToggle.js" defer></script>
+    <script id="main-js" src="scripts/MainScript.js" defer></script>
+    <script id="auth-js" src="scripts/auth.js" defer></script> <!-- Added Auth Script -->
+    <script id="attendance-js" src="scripts/attendance.js" defer></script>
+    <script id="statsTables-js" src="scripts/statsTables.js" defer></script>
+    <script id="sonMac-js" src="scripts/sonMac.js" defer></script>
+    <script id="duello-js" src="scripts/duello.js" defer></script>
+    <script id="teamPicker-js" src="scripts/teamPicker.js" defer></script>
+    <script id="players-js" src="scripts/players.js" defer></script>
+    <script id="performanceGraphs-js" src="scripts/performanceGraphs.js" defer></script>
+    <script id="themeToggle-js" src="scripts/themeToggle.js" defer></script>
 
-    <!-- Firebase SDKs (REMOVED FROM HERE) -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js" defer></script> -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js" defer></script> -->
-
+    <!-- Add this script at the end of body -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('firebase-messaging-sw.js').then(function(registration) {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          }, function(err) {
-            console.log('ServiceWorker registration failed: ', err);
-          });
-        });
-      }
+      // Set your version/hash here
+      // window.STATIC_VERSION = '22052025'; // Removed this line
+      const CACHE_BUSTER = Date.now().toString(); // Added this line
+      const staticFiles = [
+        { id: 'main-css', attr: 'href' },
+        { id: 'logo-image', attr: 'src' }, // Added logo image
+        { id: 'chartjs', attr: 'src' },
+        { id: 'firebase-app', attr: 'src' },
+        { id: 'firebase-auth', attr: 'src' },
+        { id: 'firebase-db', attr: 'src' },
+        { id: 'main-js', attr: 'src' },
+        { id: 'auth-js', attr: 'src' },
+        { id: 'attendance-js', attr: 'src' },
+        { id: 'statsTables-js', attr: 'src' },
+        { id: 'sonMac-js', attr: 'src' },
+        { id: 'duello-js', attr: 'src' },
+        { id: 'teamPicker-js', attr: 'src' },
+        { id: 'players-js', attr: 'src' },
+        { id: 'performanceGraphs-js', attr: 'src' },
+        { id: 'themeToggle-js', attr: 'src' },
+      ];
+      staticFiles.forEach(file => {
+        const el = document.getElementById(file.id);
+        if (el) {
+          // Updated line to correctly use CACHE_BUSTER
+          const baseUrl = el[file.attr].split('?')[0]; 
+          el[file.attr] = baseUrl + '?' + 'v=' + CACHE_BUSTER;
+        }
+      });
     </script>
 
 </body>

@@ -101,8 +101,12 @@ const queries = {
     WITH match_date_info AS (
         SELECT MAX(matches.date::date) AS latest_match_date  
         FROM matches
+    ),
+    season_start_info AS (
+        SELECT '${sezonbaslangic}'::date AS seasonstart
     )
     SELECT
+        matches.date::date AS match_date,
         matches.map_name,
         teams.name AS team_name,
         p1.name,
@@ -129,8 +133,9 @@ const queries = {
         ON c.match_checksum = matches.checksum 
         AND c.clutcher_steam_id = p1.steam_id
     WHERE 
-        matches.date::date = (SELECT latest_match_date FROM match_date_info)
+        matches.date::date BETWEEN (SELECT seasonstart FROM season_start_info) AND (SELECT latest_match_date FROM match_date_info)
     GROUP BY
+        matches.date::date,
         matches.map_name,
         teams.name,
         teams.score,
@@ -139,6 +144,7 @@ const queries = {
         c.num_clutches,
         c.num_successful_clutches
     ORDER BY
+        matches.date::date DESC,
         matches.map_name,
         teams.name,
         HLTV_2 DESC;
@@ -210,88 +216,129 @@ const queries = {
 
   // Query for night_avg.json - retrieves stats from night matches
   nightAvg: `
-  WITH 
-    -- Get the last night date
-    last_night_dates AS (
-      SELECT DISTINCT matches.date::date AS unique_date
+    WITH season_start_info AS (
+      SELECT '${sezonbaslangic}'::date AS seasonstart
+    ),
+    match_dates AS (
+      SELECT DISTINCT matches.date::date AS match_date
       FROM matches
-      ORDER BY unique_date DESC
-      LIMIT 1
+      WHERE matches.date::date >= (SELECT seasonstart FROM season_start_info)
+      ORDER BY match_date ASC
     ),
-    last_night_range AS (
-      SELECT 
-        MIN(unique_date) AS x_days_before,
-        MAX(unique_date) AS latest_match_date
-      FROM last_night_dates
+    player_dates AS (
+      SELECT DISTINCT p1.steam_id, matches.date::date AS match_date
+      FROM players p1
+      INNER JOIN matches ON p1.match_checksum = matches.checksum
+      WHERE matches.date::date >= (SELECT seasonstart FROM season_start_info)
     ),
-    -- Get the last 10 nights excluding the last night
-    last_10_nights_dates AS (
-      SELECT DISTINCT matches.date::date AS unique_date
-      FROM matches
-      WHERE matches.date::date < (SELECT latest_match_date FROM last_night_range)
-      ORDER BY unique_date DESC
-      LIMIT 10
-    ),
-    last_10_nights_range AS (
-      SELECT 
-        MIN(unique_date) AS x_days_before,
-        MAX(unique_date) AS latest_match_date
-      FROM last_10_nights_dates
-    ),
-    -- Aggregate player stats for the last night (using the long select clause only here)
-    player_stats AS (
+    player_stats_per_date AS (
       SELECT
         p1.steam_id,
         MAX(p1.name) AS name,
-        ${selectClause}
+        matches.date::date AS match_date,
+        AVG(p1.hltv_rating_2) AS hltv_2,
+        AVG(p1.average_damage_per_round) AS adr,
+        AVG(p1.kill_death_ratio) AS kd,
+        SUM(p1.mvp_count) AS mvp,
+        SUM(p1.kill_count) AS kills,
+        SUM(p1.death_count) AS deaths,
+        SUM(p1.assist_count) AS assists,
+        SUM(p1.headshot_count) AS headshot_kills,
+        AVG(p1.headshot_percentage) AS headshot_killratio,
+        SUM(p1.first_kill_count) AS first_kill_count,
+        SUM(p1.first_death_count) AS first_death_count,
+        SUM(p1.bomb_planted_count) AS bomb_planted,
+        SUM(p1.bomb_defused_count) AS bomb_defused,
+        AVG(p1.hltv_rating) AS hltv,
+        AVG(p1.kast) AS kast,
+        SUM(p1.utility_damage) AS utl_dmg,
+        SUM(p1.two_kill_count) AS two_kills,
+        SUM(p1.three_kill_count) AS three_kills,
+        SUM(p1.four_kill_count) AS four_kills,
+        SUM(p1.five_kill_count) AS five_kills,
         COUNT(*) AS matches_in_interval
-      FROM players AS p1
+      FROM players p1
       INNER JOIN matches ON p1.match_checksum = matches.checksum
-      WHERE matches.date::date BETWEEN 
-            (SELECT x_days_before FROM last_night_range)
-        AND (SELECT latest_match_date FROM last_night_range)
-      GROUP BY p1.steam_id
+      WHERE matches.date::date >= (SELECT seasonstart FROM season_start_info)
+      GROUP BY p1.steam_id, matches.date::date
     ),
-    -- Aggregate HLTV_2 and ADR for the last 10 nights (excluding the last night)
-    stats_last_10 AS (
+    prev_10_dates AS (
       SELECT
-        p1.steam_id,
-        AVG(p1.hltv_rating_2) AS HLTV_2_10,
-        AVG(p1.average_damage_per_round) AS adr_10
-      FROM players AS p1
-      INNER JOIN matches ON p1.match_checksum = matches.checksum
-      WHERE matches.date::date BETWEEN 
-            (SELECT x_days_before FROM last_10_nights_range)
-        AND (SELECT latest_match_date FROM last_10_nights_range)
-      GROUP BY p1.steam_id
+        ps.steam_id,
+        ps.match_date,
+        (
+          SELECT array_agg(prev.match_date ORDER BY prev.match_date DESC)
+          FROM (
+            SELECT DISTINCT matches.date::date AS match_date
+            FROM players p
+            INNER JOIN matches ON p.match_checksum = matches.checksum
+            WHERE p.steam_id = ps.steam_id
+              AND matches.date::date < ps.match_date
+              AND matches.date::date >= (SELECT seasonstart FROM season_start_info)
+            ORDER BY matches.date::date DESC
+            LIMIT 10
+          ) prev
+        ) AS prev_dates
+      FROM player_stats_per_date ps
     ),
-    -- Aggregate clutches data for the last night
+    prev_10_agg AS (
+      SELECT
+        ps.steam_id,
+        ps.match_date,
+        AVG(prev_stats.hltv_2) AS hltv_2_10,
+        AVG(prev_stats.adr) AS adr_10
+      FROM player_stats_per_date ps
+      JOIN prev_10_dates p10 ON ps.steam_id = p10.steam_id AND ps.match_date = p10.match_date
+      LEFT JOIN player_stats_per_date prev_stats
+        ON prev_stats.steam_id = ps.steam_id AND prev_stats.match_date = ANY(p10.prev_dates)
+      GROUP BY ps.steam_id, ps.match_date
+    ),
     clutches_stats AS (
       SELECT
-        c.clutcher_steam_id,
+        c.clutcher_steam_id AS steam_id,
+        m.date::date AS match_date,
         COUNT(*) AS clutches,
         SUM(CASE WHEN c.won THEN 1 ELSE 0 END) AS clutches_won
       FROM clutches c
       INNER JOIN matches m ON c.match_checksum = m.checksum
-      WHERE m.date::date BETWEEN 
-            (SELECT x_days_before FROM last_night_range)
-        AND (SELECT latest_match_date FROM last_night_range)
-      GROUP BY c.clutcher_steam_id
+      WHERE m.date::date >= (SELECT seasonstart FROM season_start_info)
+      GROUP BY c.clutcher_steam_id, m.date::date
     )
-    
-  SELECT
-    ps.*,  -- All aggregated player stats from last night
-    (SELECT latest_match_date::date FROM last_night_range) AS latest_match_date,
-    s10.HLTV_2_10,
-    (ps.HLTV_2 - s10.HLTV_2_10) AS HLTV_2_diff,
-    s10.adr_10,
-    (ps.adr - s10.adr_10) AS adr_diff,
-    COALESCE(cs.clutches, 0) AS clutches,
-    COALESCE(cs.clutches_won, 0) AS clutches_won
-  FROM player_stats ps
-  LEFT JOIN stats_last_10 s10 ON ps.steam_id = s10.steam_id
-  LEFT JOIN clutches_stats cs ON ps.steam_id = cs.clutcher_steam_id
-  ORDER BY ps.HLTV_2 DESC;
+    SELECT
+      psd.steam_id,
+      psd.name,
+      psd.match_date,
+      psd.hltv_2,
+      psd.adr,
+      psd.kd,
+      psd.mvp,
+      psd.kills,
+      psd.deaths,
+      psd.assists,
+      psd.headshot_kills,
+      psd.headshot_killratio,
+      psd.first_kill_count,
+      psd.first_death_count,
+      psd.bomb_planted,
+      psd.bomb_defused,
+      psd.hltv,
+      psd.kast,
+      psd.utl_dmg,
+      psd.two_kills,
+      psd.three_kills,
+      psd.four_kills,
+      psd.five_kills,
+      psd.matches_in_interval,
+      COALESCE(p10a.hltv_2_10, 0) AS hltv_2_10,
+      (psd.hltv_2 - COALESCE(p10a.hltv_2_10, 0)) AS hltv_2_diff,
+      COALESCE(p10a.adr_10, 0) AS adr_10,
+      (psd.adr - COALESCE(p10a.adr_10, 0)) AS adr_diff,
+      COALESCE(cs.clutches, 0) AS clutches,
+      COALESCE(cs.clutches_won, 0) AS clutches_won
+    FROM player_stats_per_date psd
+    LEFT JOIN prev_10_agg p10a ON psd.steam_id = p10a.steam_id AND psd.match_date = p10a.match_date
+    LEFT JOIN clutches_stats cs ON psd.steam_id = cs.steam_id AND psd.match_date = cs.match_date
+    ORDER BY psd.match_date ASC, psd.hltv_2 DESC;
   `,
 
   // Query for duello_son_mac.json - retrieves stats from duello_son_mac.json
@@ -611,80 +658,108 @@ async function updateSeasonAvgStats() {
 async function updateNightAvgStats() {
   try {
     console.log('Updating night average stats...');
-    
     // Execute the query
     const results = await executeDbQuery(queries.nightAvg);
-    
     // Check if the 'rows' property exists and has data
-    if (!results || !results.rows || !results.rows.length) { 
+    if (!results || !results.rows || !results.rows.length) {
       console.log('No results found for night average stats (or results.rows is missing/empty)');
       return;
     }
-    
     // Create a mapping from column names to their index for easier lookup
     const columnMap = {};
     results.columns.forEach((colName, index) => {
-      // Ensure column names are consistently lowercased for matching
-      columnMap[colName.toLowerCase()] = index; 
+      columnMap[colName.toLowerCase()] = index;
     });
+    // Group by match_date
+    const groupedByDate = {};
+    results.rows.forEach(row => {
+      const rawMatchDateValue = row[columnMap['match_date']];
 
-    // Transform the data by mapping over results.rows
-    const transformedData = results.rows.map(row => {
+      if (rawMatchDateValue === null || typeof rawMatchDateValue === 'undefined') {
+        console.warn('Skipping row in updateNightAvgStats due to null or undefined match_date:', row);
+        return; 
+      }
+
+      let matchDateKey;
+      // Dates from PostgreSQL DATE type via node-postgres are typically strings like '2023-10-26T00:00:00.000Z'
+      // or just 'YYYY-MM-DD'. We want 'YYYY-MM-DD'.
+      if (typeof rawMatchDateValue === 'string') {
+        // If it's an ISO string with time, split it. Otherwise, assume it might be YYYY-MM-DD already or needs substring.
+        matchDateKey = rawMatchDateValue.split('T')[0];
+         // Ensure it's exactly 10 chars if no 'T' was present but it was longer.
+        if (matchDateKey.length > 10) {
+            matchDateKey = matchDateKey.substring(0,10);
+        }
+      } else if (rawMatchDateValue instanceof Date) {
+        matchDateKey = rawMatchDateValue.toISOString().split('T')[0];
+      } else {
+        // Fallback for other types, try to convert to Date first
+        try {
+          matchDateKey = new Date(rawMatchDateValue).toISOString().split('T')[0];
+        } catch (e) {
+          console.warn(`Could not parse date for key in updateNightAvgStats: ${rawMatchDateValue}`, e);
+          return; 
+        }
+      }
+      
+      // Basic validation for YYYY-MM-DD format
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(matchDateKey)) {
+          console.warn(`Skipping row in updateNightAvgStats due to invalid date key format: ${matchDateKey} from original value: ${rawMatchDateValue}`);
+          return;
+      }
+
+      if (!groupedByDate[matchDateKey]) {
+        groupedByDate[matchDateKey] = [];
+      }
       // Helper function to safely get data and parse it
       const getData = (colName, parseFn = parseFloat, defaultValue = 0) => {
         const index = columnMap[colName.toLowerCase()];
-        // Check if the index exists and the value is not null/undefined
         if (index === undefined || row[index] === null || row[index] === undefined) {
           return defaultValue;
         }
         const value = row[index];
-        // Attempt parsing, fall back to defaultValue if parsing results in NaN or fails
         const parsedValue = parseFn(value);
         return isNaN(parsedValue) ? defaultValue : parsedValue;
       };
       // Get steam_id directly
       const steamId = row[columnMap['steam_id'.toLowerCase()]];
-
-      // Access data using the getData helper function and map to desired JSON keys
-      return { 
-        steam_id: steamId, // Add steam_id here
-        name: row[columnMap['name'.toLowerCase()]], // Name is likely a string
+      groupedByDate[matchDateKey].push({
+        steam_id: steamId,
+        name: row[columnMap['name'.toLowerCase()]],
         "HLTV 2": getData('hltv_2'),
         "ADR": getData('adr'),
         "K/D": getData('kd'),
-        "MVP": getData('mvp'), 
-        "Kills": getData('kills'), 
-        "Deaths": getData('deaths'), 
-        "Assists": getData('assists'), 
-        "HS": getData('headshot_kills'), 
+        "MVP": getData('mvp'),
+        "Kills": getData('kills'),
+        "Deaths": getData('deaths'),
+        "Assists": getData('assists'),
+        "HS": getData('headshot_kills'),
         "HS/Kill ratio": getData('headshot_killratio'),
-        "First Kill": getData('first_kill_count'), 
-        "First Death": getData('first_death_count'), 
-        "Bomb Planted": getData('bomb_planted'), 
-        "Bomb Defused": getData('bomb_defused'), 
+        "First Kill": getData('first_kill_count'),
+        "First Death": getData('first_death_count'),
+        "Bomb Planted": getData('bomb_planted'),
+        "Bomb Defused": getData('bomb_defused'),
         "HLTV": getData('hltv'),
         "KAST": getData('kast'),
         "Utility Damage": getData('utl_dmg'),
-        "2 kills": getData('two_kills'), 
-        "3 kills": getData('three_kills'), 
-        "4 kills": getData('four_kills'), 
-        "5 kills": getData('five_kills'), 
-        "Nr of Matches": getData('matches_in_interval'), 
+        "2 kills": getData('two_kills'),
+        "3 kills": getData('three_kills'),
+        "4 kills": getData('four_kills'),
+        "5 kills": getData('five_kills'),
+        "Nr of Matches": getData('matches_in_interval'),
         "HLTV2 DIFF": getData('hltv_2_diff'),
         "ADR DIFF": getData('adr_diff'),
-        "Clutch Opportunity": getData('clutches'), 
+        "Clutch Opportunity": getData('clutches'),
         "Clutches Won": getData('clutches_won')
-      };
+      });
     });
-    
     // Write the result to night_avg.json
     const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    
     const filePath = path.join(dataDir, 'night_avg.json');
-    fs.writeFileSync(filePath, JSON.stringify(transformedData, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(groupedByDate, null, 2));
     console.log('✅ Night average stats written to data/night_avg.json');
   } catch (error) {
     console.error('❌ Error updating night average stats:', error);
@@ -777,21 +852,21 @@ async function updateLast10Stats() {
 // Process the Son Maç (Last Match) stats
 async function updateSonMacStats() {
   try {
-    console.log('Updating Son Maç stats...');
+    console.log('Updating Son Maç stats (by date)...');
 
     const results = await executeDbQuery(queries.sonmac);
 
     if (!results || !results.rows || !results.rows.length) {
       console.log('No results found for Son Maç stats.');
-      // Create an empty structure if no data
-      const emptyData = { maps: {} };
+      const emptyData = {}; // Empty object for dates
       const dataDir = path.join(__dirname, '..', 'data');
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
       }
-      const filePath = path.join(dataDir, 'sonmac.json');
+      // This will now write to sonmac_by_date.json
+      const filePath = path.join(dataDir, 'sonmac_by_date.json');
       fs.writeFileSync(filePath, JSON.stringify(emptyData, null, 2));
-      console.log('✅ Empty Son Maç stats written to data/sonmac.json');
+      console.log('✅ Empty Son Maç stats (by date) written to data/sonmac_by_date.json');
       return;
     }
 
@@ -810,49 +885,75 @@ async function updateSonMacStats() {
       return isNaN(parsedValue) ? defaultValue : parsedValue;
     };
 
-    const mapsData = {};
+    const allDatesData = {}; // Store all data grouped by date
 
     results.rows.forEach(row => {
+      const rawMatchDateValue = row[columnMap['match_date']];
+      let matchDateKey;
+      if (typeof rawMatchDateValue === 'string') {
+        matchDateKey = rawMatchDateValue.split('T')[0];
+        if (matchDateKey.length > 10) {
+            matchDateKey = matchDateKey.substring(0,10);
+        }
+      } else if (rawMatchDateValue instanceof Date) {
+        matchDateKey = rawMatchDateValue.toISOString().split('T')[0];
+      } else {
+        try {
+          matchDateKey = new Date(rawMatchDateValue).toISOString().split('T')[0];
+        } catch (e) {
+          console.warn(`Could not parse date for key in updateSonMacStats: ${rawMatchDateValue}`, e);
+          return; 
+        }
+      }
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(matchDateKey)) {
+          console.warn(`Skipping row in updateSonMacStats due to invalid date key format: ${matchDateKey} from original value: ${rawMatchDateValue}`);
+          return;
+      }
+
+      if (!allDatesData[matchDateKey]) {
+        allDatesData[matchDateKey] = { maps: {} };
+      }
+
+      const mapsDataForDate = allDatesData[matchDateKey].maps;
+
       const mapName = row[columnMap['map_name']];
       const teamName = row[columnMap['team_name']];
-      const teamScore = getData(row, 'team_score', parseInt, 0); // Assuming score is integer
+      const teamScore = getData(row, 'team_score', parseInt, 0);
       const playerName = row[columnMap['name']];
-      const steamId = row[columnMap['steam_id']]; // Get steam_id
+      const steamId = row[columnMap['steam_id']]; 
 
-      if (!mapsData[mapName]) {
-        mapsData[mapName] = { team1: null, team2: null };
+      if (!mapsDataForDate[mapName]) {
+        mapsDataForDate[mapName] = { team1: null, team2: null };
       }
 
       let teamKey = null;
-      if (mapsData[mapName].team1 === null) {
+      if (mapsDataForDate[mapName].team1 === null) {
           teamKey = 'team1';
-      } else if (mapsData[mapName].team1.name === teamName) {
+      } else if (mapsDataForDate[mapName].team1.name === teamName) {
           teamKey = 'team1';
-      } else if (mapsData[mapName].team2 === null) {
+      } else if (mapsDataForDate[mapName].team2 === null) {
           teamKey = 'team2';
-      } else if (mapsData[mapName].team2.name === teamName) {
+      } else if (mapsDataForDate[mapName].team2.name === teamName) {
           teamKey = 'team2';
       } else {
-          console.warn(`Unexpected third team (${teamName}) found for map ${mapName}. Skipping player ${playerName}.`);
-          return; // Skip this player if we already have two distinct teams
+          console.warn(`Unexpected third team (${teamName}) found for map ${mapName} on date ${matchDateKey}. Skipping player ${playerName}.`);
+          return; 
       }
       
-      // Initialize team structure if it's the first player for this team on this map
-      if (!mapsData[mapName][teamKey]) {
-        mapsData[mapName][teamKey] = {
+      if (!mapsDataForDate[mapName][teamKey]) {
+        mapsDataForDate[mapName][teamKey] = {
           name: teamName,
           score: teamScore,
           players: []
         };
       } else {
-        // Ensure score consistency if team already exists (optional, might take first score found)
-        mapsData[mapName][teamKey].score = teamScore; 
+        mapsDataForDate[mapName][teamKey].score = teamScore; 
       }
 
-      // Map player stats - matching keys expected by index.html createTeamSection
       const playerStats = {
         name: playerName,
-        steam_id: steamId, // Add steam_id here
+        steam_id: steamId, 
         hltv_2: getData(row, 'hltv_2'),
         adr: getData(row, 'adr'),
         kd: getData(row, 'kd'),
@@ -874,27 +975,25 @@ async function updateSonMacStats() {
         four_kills: getData(row, 'four_kills'),
         five_kills: getData(row, 'five_kills'),
         score: getData(row, 'score'),
-        clutches: getData(row, 'number_of_clutches', parseInt, 0), // Renamed from query
-        clutches_won: getData(row, 'number_of_successful_clutches', parseInt, 0) // Renamed from query
+        clutches: getData(row, 'number_of_clutches', parseInt, 0),
+        clutches_won: getData(row, 'number_of_successful_clutches', parseInt, 0)
       };
 
-      mapsData[mapName][teamKey].players.push(playerStats);
+      mapsDataForDate[mapName][teamKey].players.push(playerStats);
     });
 
-    // Structure for the final JSON
-    const finalData = { maps: mapsData };
-
-    // Write the result to sonmac.json
+    // Write the result to sonmac_by_date.json
     const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    const filePath = path.join(dataDir, 'sonmac.json');
-    fs.writeFileSync(filePath, JSON.stringify(finalData, null, 2));
-    console.log('✅ Son Maç stats written to data/sonmac.json');
+    // This will now write to sonmac_by_date.json
+    const filePath = path.join(dataDir, 'sonmac_by_date.json');
+    fs.writeFileSync(filePath, JSON.stringify(allDatesData, null, 2));
+    console.log('✅ Son Maç stats (by date) written to data/sonmac_by_date.json');
 
   } catch (error) {
-    console.error('❌ Error updating Son Maç stats:', error);
+    console.error('❌ Error updating Son Maç stats (by date):', error);
   }
 }
 
