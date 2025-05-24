@@ -6,7 +6,7 @@
 // --- Constants ---
 const APPS_SCRIPT_URL = 'https://royal-flower-aa89.onur1atak.workers.dev/'; // Replace with your actual URL
 const DEFAULT_PAGE = 'home'; 
-const SEASON_AVG_JSON_URL = 'data/season_avg.json';
+const SEASON_AVG_JSON_URL = '/api/season-avg'; // Updated to use backend API
 const LAST10_JSON_URL = 'data/last10.json';
 const NIGHT_AVG_JSON_URL = 'data/night_avg.json';
 // const SONMAC_JSON_URL = 'data/sonmac.json'; // MOVED to sonMac.js
